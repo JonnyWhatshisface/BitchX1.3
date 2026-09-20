@@ -323,7 +323,8 @@ int count = 0;
 
 void charset_ibmpc (void)
 {
-	fwrite("\033(U", 3, 1, stdout);	/* switch to IBM code page 437 */
+	if (cp437utf8_supported())
+		fwrite("\033(U", 3, 1, stdout);	/* switch to IBM code page 437 */
 }
 
 SIGNAL_HANDLER(handle_pipe)

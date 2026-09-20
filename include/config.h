@@ -271,7 +271,7 @@
 /*
  * Normally BitchX uses only the IBMPC (cp437) charset.
  * Define LATIN1, if you want to see the standard Latin1 characters
- * (i.e. Ä Ö Ü ä ö ü ß <-> "A "O "U "a "o "u \qs ).
+ * (i.e. ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ ï¿½ <-> "A "O "U "a "o "u \qs ).
  *
  * You will still be able to see ansi graphics, but there will be some
  * smaller problems (i.e. after a PageUp).
@@ -300,6 +300,14 @@
  * ugly if you use the scroll up feature (PageUp/PageDown)
  */
 #undef ASCII_LOGO
+
+/*
+ * The CP437 (IBM PC) characters used by the ANSI art are always translated
+ * into the terminal's character set at runtime.  The terminal's character
+ * set is detected automatically at startup: if it is not CP437 (i.e. a
+ * UTF-8 terminal), the high bytes are translated to UTF-8, exactly as the
+ * cp437(1) wrapper does.
+ */
 
 /* If you define REVERSE_WHITE_BLACK, then the format codes for black and
  * white color are revepsed. (%W, %w is bold black and black, %K, %k is bold

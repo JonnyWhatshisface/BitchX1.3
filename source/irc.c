@@ -629,10 +629,18 @@ int old_strip_ansi = strip_ansi_in_echo;
 #ifdef ASCII_LOGO
 	        i = (int) (5.0*rand()/RAND_MAX);
 #else
-	        i = (int) (17.0*rand()/RAND_MAX);
+	        i = (int) (15.0*rand()/RAND_MAX);
 #endif   
 	else
 		i = j;
+
+#ifdef ASCII_LOGO
+	if (i < 0 || i > 4)
+		i = 4;
+#else
+	if (i < 0 || i > 14)
+		i = 14;
+#endif
 
 	if (!startup_ansi)
 		return;
@@ -1620,6 +1628,7 @@ int main(int argc, char *argv[], char *envp[])
 	my_signal(SIGUSR2, sigusr3, 0);
 #endif	
 	init_output();
+	cp437utf8_init();
 
 	if (!dumb_mode) 
 	{

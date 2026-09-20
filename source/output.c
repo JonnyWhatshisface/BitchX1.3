@@ -53,7 +53,8 @@ char three_stars[4] = "***";
 
 void charset_ibmpc (void)
 {
-	fwrite("\033(U", 3, 1, current_ftarget);	/* switch to IBM code page 437 */
+	if (cp437utf8_supported())
+		fwrite("\033(U", 3, 1, current_ftarget);	/* switch to IBM code page 437 */
 }
 
 void charset_lat1 (void)

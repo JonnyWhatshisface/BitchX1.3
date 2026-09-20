@@ -105,8 +105,8 @@
 # else
 #  define __A(x)
 #  define __N
-#  define __inline
 # endif
+# define __inline
 #endif
 
 /*

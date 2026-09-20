@@ -63,6 +63,8 @@ void avio_refresh_screen(void);
 #include "gui.h"
 #endif
 
+#include "cp437utf8.h"
+
 #ifdef TRANSLATE
 #include "translat.h"
 __inline__
@@ -75,6 +77,14 @@ static int putchar_x (int c) {
 #endif
 #else
 #if 1
+	if (!translation && !cp437utf8_supported() && ((c & 0xFF) >= 0x80))
+	{
+		unsigned char conv[CP437_UTF8_MAX_LEN + 1];
+		int i, len = cp437utf8_convert(c & 0xFF, conv);
+		for (i = 0; i < len; i++)
+			fputc(conv[i], current_ftarget);
+		return c;
+	}
 	return fputc((int) (translation ? transToClient[c] : c), current_ftarget);
 #else
 	return fputc((int) c, current_ftarget);
@@ -87,6 +97,14 @@ static int putchar_x (int c) {
 #ifdef GUI
 	return gui_putc((int) c);
 #else
+	if (!cp437utf8_supported() && ((c & 0xFF) >= 0x80))
+	{
+		unsigned char conv[CP437_UTF8_MAX_LEN + 1];
+		int i, len = cp437utf8_convert(c & 0xFF, conv);
+		for (i = 0; i < len; i++)
+			fputc(conv[i], current_ftarget);
+		return c;
+	}
 	return fputc((unsigned int) c, current_ftarget); 
 #endif
 }
