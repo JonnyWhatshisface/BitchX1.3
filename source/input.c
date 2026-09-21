@@ -2522,9 +2522,9 @@ char	buffer[BIG_BUFFER_SIZE+1];
 	if (old && *old)
 	{
 		if (strchr(completes[0], ' '))
-			sprintf(buffer, "%s%s\"%s\"", inp, space, i ? completes[0] : old);
+			snprintf(buffer, BIG_BUFFER_SIZE+1, "%s%s\"%s\"", inp, space, i ? completes[0] : old);
 		else
-			sprintf(buffer, "%s%s%s", inp, space, i ? completes[0] : old);
+			snprintf(buffer, BIG_BUFFER_SIZE+1, "%s%s%s", inp, space, i ? completes[0] : old);
 	}
 	else
 		strcpy(buffer, completes[0]);

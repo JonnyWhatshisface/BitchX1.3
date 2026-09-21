@@ -218,7 +218,7 @@ char	*crypt_msg(char *str, char *key)
 	char	thing[6] = "";
 	char	*ptr;
 
-	sprintf(thing, "%cSED ", CTCP_DELIM_CHAR);
+	snprintf(thing, 6, "%cSED ", CTCP_DELIM_CHAR);
 	*buffer = (char) 0;
 	if ((ptr = do_crypt(str, key, 1)))
 	{

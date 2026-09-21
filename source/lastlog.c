@@ -463,7 +463,7 @@ BUILT_IN_COMMAND(lastlog)
 	{
 
 		blah = (char *) alloca(strlen(match)+4);
-		sprintf(blah, "*%s*", match);
+		snprintf(blah, strlen(match)+4, "*%s*", match);
 	}
 	for (i = 0; (i < cnt) && start_pos; start_pos = (reverse ? start_pos->next : start_pos->prev))
 	{

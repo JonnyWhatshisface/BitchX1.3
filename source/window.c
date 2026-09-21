@@ -236,7 +236,7 @@ void BX_delete_window(Window *window)
 	if (window->name)
 		strmcpy(buffer, window->name, BIG_BUFFER_SIZE - 1);
 	else
-		sprintf(buffer, "%u", window->refnum);
+		snprintf(buffer, BIG_BUFFER_SIZE + 1, "%u", window->refnum);
 
 	/*
 	 * If this window is the "previous" window, then we make the current
@@ -4350,7 +4350,7 @@ int done = 0;
 		{
 			if (!my_stricmp(options[i].command, arg))
 			{
-				sprintf(buffer, "WINDOW %s", arg);
+				snprintf(buffer, BIG_BUFFER_SIZE+1, "WINDOW %s", arg);
 				userage(buffer, options[i].usage?options[i].usage:" - No help available");
 				done++;
 			}

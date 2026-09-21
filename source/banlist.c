@@ -71,7 +71,7 @@ int ofs = from_server;
 		from_server = atoi(serv_num);
 	if (channel && *channel && mode_str && user)
 	{
-		sprintf(buffer, "MODE %s %s%s %s\r\n", channel, plus_mode, mode_str, user);
+		snprintf(buffer, BIG_BUFFER_SIZE+1, "MODE %s %s%s %s\r\n", channel, plus_mode, mode_str, user);
 		push_len = strlen(buffer);
 		add_mode_buffer(buffer, push_len);
 		mode_str_len = 0;
@@ -93,7 +93,7 @@ char buffer[BIG_BUFFER_SIZE+1];
 	
 	if (mode_str && user)
 	{
-		sprintf(buffer, "MODE %s %s%s %s\r\n", chan->channel, plus_mode, mode_str, user);
+		snprintf(buffer, BIG_BUFFER_SIZE+1, "MODE %s %s%s %s\r\n", chan->channel, plus_mode, mode_str, user);
 		push_len = strlen(buffer);
 		add_mode_buffer(buffer, push_len);
 		mode_str_len = 0;
@@ -124,7 +124,7 @@ MODE $C +/-b userhost
 
 	if (reason)
 	{
-		sprintf(buffer, "KICK %s %s :%s\r\n", chan->channel, nick, reason);
+		snprintf(buffer, BIG_BUFFER_SIZE+1, "KICK %s %s :%s\r\n", chan->channel, nick, reason);
 		push_len = strlen(buffer);
 		add_mode_buffer(buffer, push_len);
 	}
@@ -136,7 +136,7 @@ MODE $C +/-b userhost
 		m_s3cat(&user, space, nick);
 		if (mode_str_len >= max_modes)
 		{
-			sprintf(buffer, "MODE %s %s%s %s\r\n", chan->channel, plus_mode, mode_str, user);
+		snprintf(buffer, BIG_BUFFER_SIZE+1, "MODE %s %s%s %s\r\n", chan->channel, plus_mode, mode_str, user);
 			push_len = strlen(buffer);
 			add_mode_buffer(buffer, push_len);
 			new_free(&mode_str);
@@ -161,7 +161,7 @@ BanList *Bans;
 		add_mode(chan, "b", 0, Bans->ban, NULL, get_int_var(NUM_BANMODES_VAR));
 	for (c = 'a'; c <= 'z'; c++)
 	{
-		sprintf(buffer, "*!*@*%c*", c);
+		snprintf(buffer, BIG_BUFFER_SIZE, "*!*@*%c*", c);
 		add_mode(chan, "b", 1, buffer, NULL, get_int_var(NUM_BANMODES_VAR));
 	}         
 	flush_mode_all(chan);
@@ -558,7 +558,7 @@ register NickList *nicks;
 	count = 0;
 	for (nicks = next_nicklist(chan, NULL); nicks; nicks = next_nicklist(chan, nicks))
 	{
-		sprintf(buffer, "%s!%s", nicks->nick, nicks->host);
+		snprintf(buffer, BIG_BUFFER_SIZE+1, "%s!%s", nicks->nick, nicks->host);
 #if 0
 		if ((all || (!isvoice && nicks->chanop) || (isvoice && nicks->voice)) &&
 		    my_stricmp(nicks->nick, get_server_nickname(from_server)) &&
@@ -709,7 +709,7 @@ BUILT_IN_COMMAND(massop)
 	for (nicks = next_nicklist(chan, NULL); nicks; nicks = next_nicklist(chan, nicks))
 	{
 		i = 0;
-		sprintf(buffer, "%s!%s", nicks->nick, nicks->host);
+		snprintf(buffer, BIG_BUFFER_SIZE+1, "%s!%s", nicks->nick, nicks->host);
 		if ((my_stricmp(nicks->nick, get_server_nickname(from_server)) && wild_match(spec, buffer)))
 		{
 			if ((massvoice && !nick_isvoice(nicks) && !nick_isop(nicks)) || !nick_isop(nicks))
@@ -804,7 +804,7 @@ register NickList *nicks;
 		*reason = 0;
 		quote_it(rest ? rest : "MassKick", NULL, reason);						
 		bitchsay("Performing (%s) Mass Kick on %s", all? "opz/non-opz" : ops ? "ops":"non-opz", chan->channel);
-		sprintf(buf, "KICK %%s %%s :\002%s\002", reason);
+		snprintf(buf, BIG_BUFFER_SIZE+1, "KICK %%s %%s :\002%s\002", reason);
 		len = strlen(buf);
 		for (new = masskick_list; new; new = new->next)
 		{

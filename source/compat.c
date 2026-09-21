@@ -446,7 +446,7 @@ char *tparm(const char *str, ...) {
 				if (conv_char == 's') {
 					if (popstring(&s))
 						return OOPS;
-					sprintf(sbuf, fmt, s);
+					snprintf(sbuf, MAX_LINE, fmt, s);
 				} else {
 					if (termcap) {
 						if (getarg(termcap++ - 1,
@@ -458,7 +458,7 @@ char *tparm(const char *str, ...) {
 					if (i == 0 && conv_char == 'c')
 						*sbuf = 0;
 					else
-						sprintf(sbuf, fmt, i);
+						snprintf(sbuf, MAX_LINE, fmt, i);
 				}
 				sp++;
 				fmt = sbuf;
@@ -1708,7 +1708,7 @@ snprintf_convert_float(char *buffer, size_t buf_size,
   if (flags & HASH_FLAG)
     *format_str_ptr++ = '#';
     
-  sprintf(format_str_ptr, "%d.%d", width, precision);
+  snprintf(format_str_ptr, 80 - (format_str_ptr - format_str), "%d.%d", width, precision);
   format_str_ptr += strlen(format_str_ptr);
 
   if (flags & IS_LONG_DOUBLE)
@@ -1716,7 +1716,7 @@ snprintf_convert_float(char *buffer, size_t buf_size,
   *format_str_ptr++ = format_char;
   *format_str_ptr++ = '\0';
 
-  sprintf(print_buf, format_str, dbl_val);
+  snprintf(print_buf, 160, format_str, dbl_val);
   print_buf_len = strlen(print_buf);
 
   if (print_buf_len > buf_size)
@@ -2370,7 +2370,7 @@ int uname(struct utsname *buf)
 		if (i > 20)
 		{
 			strcpy(buf->sysname,"Warp");
-			sprintf(buf->release, "%d.%d", (int)i/10, i-(((int)i/10)*10));
+			snprintf(buf->release, 65, "%d.%d", (int)i/10, i-(((int)i/10)*10));
 		}
 		else if (i == 10)
 			strcpy(buf->release, "2.1");
@@ -2404,7 +2404,7 @@ register unsigned int count = 0;
 
 /* ----------------------- start of base64 stuff ---------------------------*/
 /*
- * Copyright (c) 1995-2001 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995-2001 Kungliga Tekniska Hï¿½gskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  *

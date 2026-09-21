@@ -196,7 +196,7 @@ static	void	help_prompt (char *name, char *line)
 		{
 			char	tmp[BIG_BUFFER_SIZE + 1];
 
-			sprintf(tmp, "%s%sHelp? ", help_topic_list,
+			snprintf(tmp, BIG_BUFFER_SIZE + 1, "%s%sHelp? ", help_topic_list,
 				*help_topic_list ? space : empty_string);
 			if (!dumb_mode)
 				add_wait_prompt(tmp, help_me, help_topic_list,
@@ -310,7 +310,7 @@ static	void	help_show_paused_topic (char *name, char *line)
 		{
 			char	buf[BIG_BUFFER_SIZE];
 
-			sprintf(buf, "%s%sHelp? ", name, (name && *name) ? space : empty_string);
+			snprintf(buf, BIG_BUFFER_SIZE, "%s%sHelp? ", name, (name && *name) ? space : empty_string);
 			if (!dumb_mode)
 				add_wait_prompt(buf, help_me, name, WAIT_PROMPT_LINE, 1);
 		}
@@ -349,7 +349,7 @@ static	void	help_me (char *topics, char *args)
 	strcpy(help_topic_list, topics);
 	ptr = get_string_var(HELP_PATH_VAR);
 
-	sprintf(path, "%s/%s", ptr, topics);
+	snprintf(path, BIG_BUFFER_SIZE+1, "%s/%s", ptr, topics);
 	for (ptr = path; (ptr = strchr(ptr, ' '));)
 		*ptr = '/';
 
@@ -380,7 +380,7 @@ static	void	help_me (char *topics, char *args)
 		else
 			*help_topic_list = '\0';
 
-		sprintf(tmp, "%s%sHelp? ", help_topic_list, *help_topic_list ? space : empty_string);
+		snprintf(tmp, BIG_BUFFER_SIZE+1, "%s%sHelp? ", help_topic_list, *help_topic_list ? space : empty_string);
 
 		if (!dumb_mode)
 			add_wait_prompt(tmp, help_me, help_topic_list, WAIT_PROMPT_LINE, 1);
@@ -525,7 +525,7 @@ switch (entries)
 			set_help_screen(NULL);
 			break;
 		}
-		sprintf(tmp, "%s%sHelp? ", help_topic_list, *help_topic_list ? space : empty_string);
+		snprintf(tmp, BIG_BUFFER_SIZE+1, "%s%sHelp? ", help_topic_list, *help_topic_list ? space : empty_string);
 		if (!dumb_mode)
 			add_wait_prompt(tmp, help_me, help_topic_list, WAIT_PROMPT_LINE, 1);
 
@@ -541,7 +541,7 @@ switch (entries)
 	}
 	case 1:
 	{
-		sprintf(tmp, "%s/%s", path, g.gl_pathv[0]);
+		snprintf(tmp, BIG_BUFFER_SIZE+1, "%s/%s", path, g.gl_pathv[0]);
 		stat(tmp, &stat_buf);
 		if (stat_buf.st_mode & S_IFDIR)
 		{

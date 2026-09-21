@@ -1334,7 +1334,7 @@ static  char	my_buffer[MY_BUFFER/2+1];
 		if (get_server_lag(window->server) > -1)
 		{
 			char p[40];
-			sprintf(p, "%2d",get_server_lag(window->server)); 
+			snprintf(p, 40, "%2d",get_server_lag(window->server)); 
 			snprintf(my_buffer,MY_BUFFER/2, window->wset->lag_format, p);
 		}
 		else
@@ -1618,7 +1618,7 @@ int serv = window->server;
 static char my_buffer[40] = "\0";
 int on, off;
 	notify_count(serv, &on, &off);
-	sprintf(my_buffer, "%d %d", on, off);
+	snprintf(my_buffer, 40, "%d %d", on, off);
 	return my_buffer;
 }
 

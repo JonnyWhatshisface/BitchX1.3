@@ -597,7 +597,7 @@ int server;
 			log_denied("UNBAN", from, FromUserHost, to, cmd);
 			return NULL;
 		}
-		sprintf(ban, "%s!%s", from, FromUserHost);
+		snprintf(ban, BIG_BUFFER_SIZE, "%s!%s", from, FromUserHost);
 		if (chan && chan->have_op)
 		{
 			if ((b = ban_is_on_channel(ban, chan)))
@@ -1099,7 +1099,7 @@ CTCP_HANDLER(do_ping_reply)
 	 * string 'cmd' points at.  So this is safe, even
 	 * if it looks "unsafe".
 	 */
-	sprintf(cmd, "%5.3f seconds", (float)(tsec + (tusec / 1000000.0)));
+	snprintf(cmd, BIG_BUFFER_SIZE, "%5.3f seconds", (float)(tsec + (tusec / 1000000.0)));
 	return NULL;
 }
 

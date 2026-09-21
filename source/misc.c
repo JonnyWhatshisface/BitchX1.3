@@ -152,7 +152,7 @@ char *convert_time (time_t ltime)
 	ltime = (ltime - minutes) / 60;
 	hours = ltime % 24;
 	days = (ltime - hours) / 24;
-	sprintf(buffer, "%2lud %2luh %2lum %2lus", days, hours, minutes, seconds);
+	snprintf(buffer, 40, "%2lud %2luh %2lum %2lus", days, hours, minutes, seconds);
 	return(*buffer ? buffer : empty_string);
 }
 
@@ -1261,12 +1261,12 @@ FILE	*f;
 	strftime(s1, 30, "%I:%M%p", localtime(&t));
 	chname=va_arg(va,char *);
 	format=va_arg(va,char *);
-	vsprintf(s,format,va);
+	vsnprintf(s, BIG_BUFFER_SIZE+1, format, va);
 	
 	if (!*s) 
 		strcpy(s2,empty_string);
-	else 
-		sprintf(s2,"[%s] %s",s1,s); 
+		else 
+			snprintf(s2, BIG_BUFFER_SIZE+1, "[%s] %s",s1,s);
 
 	if (chname && *chname =='*')
 	{
@@ -1289,7 +1289,7 @@ int rename_file (char *old_file, char **new_file)
 
 	
 	c = alloca(10);
-	sprintf(c, "%03i.", getrandom(0, 999));
+	snprintf(c, 10, "%03i.", getrandom(0, 999));
 	if (get_string_var(DCC_DLDIR_VAR))
 		malloc_sprintf(&tmp, "%s/%s", get_string_var(DCC_DLDIR_VAR), c);
 	else
@@ -1300,7 +1300,7 @@ int rename_file (char *old_file, char **new_file)
 	while ((fp = fopen(tmp, "r")) != NULL)
 	{
 		fclose(fp);
-		sprintf(c, "%03i.", getrandom(0, 999));
+		snprintf(c, 10, "%03i.", getrandom(0, 999));
 		if (get_string_var(DCC_DLDIR_VAR))
 			malloc_sprintf(&tmp, "%s/%s", get_string_var(DCC_DLDIR_VAR), c);
 		else
@@ -1681,7 +1681,7 @@ BUILT_IN_COMMAND(ChanWallOp)
 			new_free(&channel);
 		}
 		set_display_target(channel, LOG_WALL);
-		sprintf(buffer, "[\002BX-Wall\002/\002%s\002] %s", channel, args);
+		snprintf(buffer, BIG_BUFFER_SIZE + 1, "[\002BX-Wall\002/\002%s\002] %s", channel, args);
 		if (ver >= Server_u2_10 || enable_all)
 		{
 			send_to_server(enable_all?"NOTICE @%s :%s":"WALLCHOPS %s :%s", channel, buffer);
@@ -1899,9 +1899,9 @@ struct in_addr ip;
 	{
 		int i;
 		if (rptr->nick && rptr->user)
-			sprintf(buffer, "%s!%s@%s ", n, u, h);
+			snprintf(buffer, BIG_BUFFER_SIZE, "%s!%s@%s ", n, u, h);
 		else
-			sprintf(buffer, "%s ", h);
+			snprintf(buffer, BIG_BUFFER_SIZE, "%s ", h);
 		for (i = 0; rptr->re_he.h_addr_list[i].s_addr; i++)
 		{
 			bcopy(&rptr->re_he.h_addr_list[i], (char *)&ip, sizeof(ip));
@@ -1939,9 +1939,9 @@ void print_ns_fail(struct reslist *rptr)
 	{
 		char buffer[BIG_BUFFER_SIZE];
 		if (rptr->nick && rptr->user)
-			sprintf(buffer, "%s!%s@%s ", rptr->nick, rptr->user, rptr->host);
+			snprintf(buffer, BIG_BUFFER_SIZE, "%s!%s@%s ", rptr->nick, rptr->user, rptr->host);
 		else
-			sprintf(buffer, "%s ", rptr->host);
+			snprintf(buffer, BIG_BUFFER_SIZE, "%s ", rptr->host);
 		parse_line("NSLOOKUP", rptr->command, buffer, 0, 0, 1);
 		return;
 	}
@@ -2621,7 +2621,7 @@ static	int	do_query_number(struct resinfo *resi, char *numb, register struct res
 	 * name to get more names to query!.
 	 */
 	cp = (unsigned char *)numb;
-	(void)sprintf(ipbuf,"%u.%u.%u.%u.in-addr.arpa.",
+	(void)snprintf(ipbuf, 32, "%u.%u.%u.%u.in-addr.arpa.",
 			(unsigned int)(cp[3]), (unsigned int)(cp[2]),
 			(unsigned int)(cp[1]), (unsigned int)(cp[0]));
 
@@ -3943,16 +3943,16 @@ void userhost_ignore (UserhostItem *stuff, char *nick1, char *args)
 		host = stuff->host; nick = stuff->nick;
 	}
 	if (!arg || !*arg || !my_stricmp(arg, "+HOST"))
-		sprintf(ignorebuf, "*!*@%s ALL -CRAP -PUBLIC", cluster(host));
+		snprintf(ignorebuf, BIG_BUFFER_SIZE+1, "*!*@%s ALL -CRAP -PUBLIC", cluster(host));
 	else if (!my_stricmp(arg, "+USER"))
-		sprintf(ignorebuf, "*%s@%s ALL -CRAP -PUBLIC", user, cluster(host));
+		snprintf(ignorebuf, BIG_BUFFER_SIZE+1, "*%s@%s ALL -CRAP -PUBLIC", user, cluster(host));
 	else if (!my_stricmp(arg, "-USER") || !my_stricmp(arg, "-HOST"))
 	{
 		int found = 0;
 		if (!my_stricmp(arg, "-HOST"))
-			sprintf(ignorebuf, "*!*@%s", cluster(host));
+			snprintf(ignorebuf, BIG_BUFFER_SIZE+1, "*!*@%s", cluster(host));
 		else
-			sprintf(ignorebuf, "%s!%s@%s", nick, user, host);
+			snprintf(ignorebuf, BIG_BUFFER_SIZE+1, "%s!%s@%s", nick, user, host);
 		igptr = ignored_nicks;
 		while (igptr != NULL)
 		{
@@ -3960,7 +3960,7 @@ void userhost_ignore (UserhostItem *stuff, char *nick1, char *args)
 			if (wild_match(igptr->nick, ignorebuf) ||
 			    wild_match(nick, igptr->nick))
 			{
-				sprintf(ignorebuf, "%s NONE", igptr->nick);
+				snprintf(ignorebuf, BIG_BUFFER_SIZE+1, "%s NONE", igptr->nick);
 				old_window_display = window_display;
 				window_display = 0;
 				ignore(NULL, ignorebuf, ignorebuf, NULL);
@@ -3980,7 +3980,7 @@ void userhost_ignore (UserhostItem *stuff, char *nick1, char *args)
 	if ((arg = next_arg(args, &args)))
 	{
 		char tmp[BIG_BUFFER_SIZE+1];
-		sprintf(tmp, "%s ^IGNORE %s NONE", arg, ignorebuf);
+		snprintf(tmp, BIG_BUFFER_SIZE+1, "%s ^IGNORE %s NONE", arg, ignorebuf);
 		timercmd("TIMER", tmp, NULL, NULL);
 	}
 	window_display = old_window_display;
@@ -4252,7 +4252,7 @@ int	count = 0,
 	sortl = sorted_nicklist(chan, sorted);
 	for (nicks = sortl; nicks; nicks = nicks->next)
 	{
-		sprintf(modebuf, "%s!%s", nicks->nick,
+		snprintf(modebuf, BIG_BUFFER_SIZE + 1, "%s!%s", nicks->nick,
 		      nicks->host ? nicks->host : "<UNKNOWN@UNKNOWN>");
 		if (msg == 7 && nicks->ip)
 		{

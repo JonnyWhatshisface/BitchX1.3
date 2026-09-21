@@ -559,8 +559,39 @@ case "$with_ssl" in
 esac
 case "$with_ssl" in
     yes|check)
-      AC_CHECK_LIB([crypto], [ERR_get_error], [], [], [])
-      AS_IF([test x"$ac_cv_lib_crypto_ERR_get_error" = x"yes"], [AC_CHECK_LIB([ssl], [SSL_accept], [], [], [])], [])
+      dnl On macOS, check Homebrew OpenSSL paths if not found in default locations
+      if test "$(uname)" = "Darwin"; then
+        if test x"$ac_cv_lib_ssl_SSL_accept" != x"yes"; then
+          dnl Apple Silicon Homebrew
+          if test -f /opt/homebrew/lib/libssl.dylib; then
+            CFLAGS="$CFLAGS -I/opt/homebrew/include"
+            LDFLAGS="$LDFLAGS -L/opt/homebrew/lib"
+            AC_CHECK_LIB([crypto], [ERR_get_error], [], [], [-L/opt/homebrew/lib])
+            AC_CHECK_LIB([ssl], [SSL_accept], [], [], [-L/opt/homebrew/lib])
+          fi
+        fi
+        if test x"$ac_cv_lib_ssl_SSL_accept" != x"yes"; then
+          dnl Intel Mac Homebrew
+          if test -f /usr/local/lib/libssl.dylib; then
+            CFLAGS="$CFLAGS -I/usr/local/include"
+            LDFLAGS="$LDFLAGS -L/usr/local/lib"
+            AC_CHECK_LIB([crypto], [ERR_get_error], [], [], [-L/usr/local/lib])
+            AC_CHECK_LIB([ssl], [SSL_accept], [], [], [-L/usr/local/lib])
+          fi
+        fi
+        if test x"$ac_cv_lib_ssl_SSL_accept" != x"yes"; then
+          dnl Try Homebrew's latest OpenSSL version directory
+          for hb in /opt/homebrew/opt/openssl@* /usr/local/opt/openssl@*; do
+            if test -f "$hb/lib/libssl.dylib"; then
+              CFLAGS="$CFLAGS -I${hb}/include"
+              LDFLAGS="$LDFLAGS -L${hb}/lib"
+              AC_CHECK_LIB([crypto], [ERR_get_error], [], [], ["-L${hb}/lib"])
+              AC_CHECK_LIB([ssl], [SSL_accept], [], [], ["-L${hb}/lib"])
+              break
+            fi
+          done
+        fi
+      fi
       AS_IF([test x"$ac_cv_lib_ssl_SSL_accept" != x"yes"],
           [AS_IF([test x"$with_ssl" = x"yes"],
 		    [AC_MSG_FAILURE([--with-ssl given, but could not find OpenSSL.])],

@@ -644,7 +644,7 @@ __inline static	TOKEN	pushs (expr_info *c, char *val)
 {
 	char	*blah;
 	blah = alloca(strlen(val) + 2);
-	sprintf(blah, "[%s", val);
+	snprintf(blah, strlen(val) + 2, "[%s", val);
 	return pusht(c, tokenize(c, blah)); 
 }
 

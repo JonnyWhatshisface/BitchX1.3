@@ -120,7 +120,7 @@ void funny_print_widelist(void)
 	*buffer1 = '\0';
 	for (i = 1; i < wl_elements; i++)
 	{
-		sprintf(buffer2, "%s(%d) ", wide_list[i]->channel,
+		snprintf(buffer2, BIG_BUFFER_SIZE, "%s(%d) ", wide_list[i]->channel,
 				wide_list[i]->users);
 		ptr = strchr(buffer1, '\0');
 		if (strlen(buffer1) + strlen(buffer2) > current_term->TI_cols - 5)
@@ -343,7 +343,7 @@ int user_count = 0;
 	if (last_width != get_int_var(CHANNEL_NAME_WIDTH_VAR))
 	{
 		if ((last_width = get_int_var(CHANNEL_NAME_WIDTH_VAR)) != 0)
-			sprintf(format, "%%s: %%-%u.%us %%s",
+			snprintf(format, 30, "%%s: %%-%u.%us %%s",
 				(unsigned char) last_width,
 				(unsigned char) last_width);
 		else
@@ -418,7 +418,7 @@ void funny_mode(char *from, char **ArgList)
 	{
 		set_display_target(channel, LOG_CRAP);
 		if (do_hook(current_numeric, "%s %s %s", from, channel, mode))
-			put_it("%s", convert_output_format(fget_string_var(FORMAT_MODE_CHANNEL_FSET), "%s %s %s %s %s", update_clock(GET_TIME), from, *FromUserHost ? FromUserHost:"ÿ", channel, mode));
+			put_it("%s", convert_output_format(fget_string_var(FORMAT_MODE_CHANNEL_FSET), "%s %s %s %s %s", update_clock(GET_TIME), from, *FromUserHost ? FromUserHost:"ï¿½", channel, mode));
 		reset_display_target();
 	}
 }

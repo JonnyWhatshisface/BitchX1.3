@@ -90,7 +90,7 @@ static	void	do_stack_on (int type, char *args)
 	}
 	if (which < 0)
 	{
-		sprintf(foo, "%3.3u", -which);
+				snprintf(foo, 10, "%3.3u", -which);
 		if ((nhook = find_name_in_hooklist(foo, numeric_list, 0, HOOKTABLE_SIZE)))
 			list = nhook->list;
 	}
@@ -163,7 +163,7 @@ static	void	do_stack_on (int type, char *args)
 			/* look -- do we have any hooks already for this numeric? */
 			if (p->list)
 			{
-				sprintf(foo, "%3.3u", -which);
+		snprintf(foo, 10, "%3.3u", -which);
 				nhook = add_name_to_hooklist(foo, NULL, numeric_list, HOOKTABLE_SIZE);
 				add_to_list_ext((List **)&nhook->list, (List *)p->list, (int (*)(List *, List *))Add_Remove_Check);
 			}

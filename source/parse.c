@@ -838,7 +838,7 @@ static	void p_pong(char *from, char **ArgList)
 			timethen.tv_sec = my_atol(ArgList[1]+3);
 #endif
 			get_time(&timenow);
-			sprintf(buff, "%2.4f", BX_time_diff(timethen, timenow));
+			snprintf(buff, 50, "%2.4f", BX_time_diff(timethen, timenow));
 			put_it("%s", convert_output_format("$G Server pong from %W$0%n $1 seconds", "%s %s", ArgList[0], buff));
 			clear_server_sping(from_server, ArgList[0]);
 		}
@@ -851,10 +851,10 @@ static	void p_pong(char *from, char **ArgList)
 #ifdef HAVE_GETTIMEOFDAY
 				struct timeval timenow = {0};
 				get_time(&timenow);
-				sprintf(buff, "%2.4f", BX_time_diff(tmp->in_sping, timenow));
+				snprintf(buff, 50, "%2.4f", BX_time_diff(tmp->in_sping, timenow));
 				put_it("%s", convert_output_format("$G Server pong from %W$0%n $1 seconds", "%s %s", ArgList[0], buff));
 #else
-				sprintf(buff, "%2ld.x", now - tmp->in_sping);
+				snprintf(buff, 50, "%2ld.x", now - tmp->in_sping);
 				put_it("%s", convert_output_format("$G Server pong from %W$0%n $1 seconds", "%s %s", ArgList[0], buff));
 #endif
 				clear_server_sping(from_server, ArgList[0]);
@@ -968,7 +968,7 @@ void add_user_who (WhoEntry *w, char *from, char **ArgList)
 
 	/* Obviously this is safe. */
 	userhost = alloca(strlen(ArgList[1]) + strlen(ArgList[2]) + 2);
-	sprintf(userhost, "%s@%s", ArgList[1], ArgList[2]);
+	snprintf(userhost, strlen(ArgList[1]) + strlen(ArgList[2]) + 2, "%s@%s", ArgList[1], ArgList[2]);
 	voice = (strchr(ArgList[5], '+') != NULL);
 	op = (strchr(ArgList[5], '@') != NULL);
 	chan = add_to_channel(ArgList[0], ArgList[4], from_server, op, voice, userhost, ArgList[3], ArgList[5], 0, ArgList[6] ? my_atol(ArgList[6]) : 0);

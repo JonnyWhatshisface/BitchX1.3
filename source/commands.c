@@ -901,7 +901,7 @@ char *mylist = NULL;
 	if (!(var = find_command(name, cnt)))
 		return m_strdup(empty_string);
 	loc_match = alloca(strlen(name)+2);
-	sprintf(loc_match, "%s*", (name && *name) ? name : empty_string);
+	snprintf(loc_match, strlen(name)+2, "%s*", (name && *name) ? name : empty_string);
 	while (wild_match(loc_match, var->name))
 	{
 		m_s3cat(&mylist, space, var->name);
@@ -3156,7 +3156,7 @@ int silent = 0;
 	if (get_int_var(MSGLOG_VAR))
 	{
 		char tmp[100];
-		sprintf(tmp, " read /away msgs (%d msg%s) log [Y/n]? ", get_int_var(MSGCOUNT_VAR), plural(get_int_var(MSGCOUNT_VAR)));
+		snprintf(tmp, 100, " read /away msgs (%d msg%s) log [Y/n]? ", get_int_var(MSGCOUNT_VAR), plural(get_int_var(MSGCOUNT_VAR)));
 		add_wait_prompt(tmp, read_away_log, empty_string, WAIT_PROMPT_LINE, 1); 
 	}
 	set_int_var(MSGCOUNT_VAR, 0);

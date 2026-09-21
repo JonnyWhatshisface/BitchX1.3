@@ -743,7 +743,7 @@ extern char *BX_host_to_ip (const char *host)
 	struct hostent *hep = gethostbyname(host);
 	static char ip[30];
 
-	return (hep ? sprintf(ip,"%u.%u.%u.%u",	hep->h_addr[0] & 0xff,
+	return (hep ? snprintf(ip,30,"%u.%u.%u.%u",	hep->h_addr[0] & 0xff,
 						hep->h_addr[1] & 0xff,
 						hep->h_addr[2] & 0xff,
 						hep->h_addr[3] & 0xff),

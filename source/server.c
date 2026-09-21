@@ -1259,7 +1259,7 @@ static	int	connect_to_server_direct (char *server_name, int port)
 	pw=getpwuid(getuid());
 	if(!pw)
 		goto noidentwd;
-	sprintf(lockfile, "%s/.identwd", pw->pw_dir);
+	snprintf(lockfile, 1024, "%s/.identwd", pw->pw_dir);
 	
 	if(*server_name=='/')
 		goto noidentwd;
@@ -1277,7 +1277,7 @@ static	int	connect_to_server_direct (char *server_name, int port)
 		goto noidentwd;
 	
 	memcpy(&raddr.sin_addr, hp->h_addr, hp->h_length);
-	sprintf(lockfile, "%s/.identwd/%s.%i.LOCK", pw->pw_dir,
+	snprintf(lockfile, 1024, "%s/.identwd/%s.%i.LOCK", pw->pw_dir,
 		inet_ntoa((struct in_addr)raddr.sin_addr), port);
 	if ((fp=fopen(lockfile, "w")))
 	{
@@ -3115,7 +3115,7 @@ unsigned int lport = 0, rport = 0;
 			already_identd = 0;
 			return;
 		}
-		sprintf(buffer, "%hu , %hu : USERID : UNIX : %s", lport, rport, username);
+		snprintf(buffer, 100, "%hu , %hu : USERID : UNIX : %s", lport, rport, username);
 		dcc_printf(s, "%s\r\n", buffer);
 #if 0
 		put_it("'Sent IDENTD request %s", buffer);

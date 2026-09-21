@@ -473,11 +473,11 @@ void BX_irc_exit (int really_quit, char *reason, char *format, ...)
 	{
 		va_list arglist;
 		va_start(arglist, format);
-		vsprintf(buffer, format, arglist);
+		vsnprintf(buffer, BIG_BUFFER_SIZE, format, arglist);
 		va_end(arglist);
 	}
 	else
-		sprintf(buffer, "%s -- just do it.",irc_version);
+		snprintf(buffer, BIG_BUFFER_SIZE, "%s -- just do it.",irc_version);
 
 	if (really_quit)
 	{
@@ -1495,7 +1495,7 @@ FILE *t;
 		if (save_ipc != -1 && (s = get_socket(save_ipc)))
 		{
 			char buf[500];
-			sprintf(buf, s->server, s->port);
+			snprintf(buf, 500, s->server, s->port);
 			unlink(buf);
 		}
 #endif
@@ -1714,7 +1714,7 @@ int main(int argc, char *argv[], char *envp[])
 
 #ifdef CLOAKED
 	initsetproctitle(argc, argv, envp);
-	sprintf(proctitlestr, CLOAKED);
+	snprintf(proctitlestr, 140, CLOAKED);
 	setproctitle("%s", proctitlestr);
 #endif
 

@@ -303,7 +303,7 @@ char *s;
 		s += strlen(chan->key);
 	}
 	if (chan->limit)
-		sprintf(s, " %d", chan->limit);
+		snprintf(s, BIG_BUFFER_SIZE/4+1 - (s - buffer), " %d", chan->limit);
 	else
 		*s = '\0';
 	return buffer;
@@ -1237,7 +1237,7 @@ char *pgm = NULL;
 int direct = 0;
 
 	
-	sprintf(name, "%%%s", command);
+	snprintf(name, 40, "%%%s", command);
 	if (command && !my_stricmp(command, "shell"))
 	{
 		pgm = get_string_var(SHELL_VAR);
@@ -2601,7 +2601,7 @@ static int create_ipc_socket(void)
 		return 1;
 	}
 
-	sprintf(buf, socket_path, port);
+	snprintf(buf, BIG_BUFFER_SIZE+1, socket_path, port);
 	if ((u = open(buf, O_CREAT|O_WRONLY, 0600)) != -1)
 	{
 		chmod(buf, SOCKMODE);

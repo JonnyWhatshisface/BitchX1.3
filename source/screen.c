@@ -662,7 +662,7 @@ const 	u_char	*ptr = NULL;
 					(strlen((const char *)cont_ptr) < indent))
 			{
 				cont = alloca(indent+10);
-				sprintf((char *)cont, "%-*s", indent, (const char *)cont_ptr);
+				snprintf((char *)cont, indent+10, "%-*s", indent, (const char *)cont_ptr);
 			}
 			else if (!*cont && *cont_ptr)
 				cont = cont_ptr;

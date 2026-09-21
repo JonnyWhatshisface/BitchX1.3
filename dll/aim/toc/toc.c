@@ -314,7 +314,7 @@ char *print_header(void *hdr_v)
 	return s;
 }
 
-int toc_callback(int fd)
+void toc_callback(int fd)
 {
         char *buf;
 	char *c;
@@ -329,7 +329,7 @@ int toc_callback(int fd)
                 toc_signoff();
 		toc_debug_printf("need to do proper sign off on this\n");
 		toc_msg_printf(TOC_CONNECT_MSGS,"Connection Closed");
-		return -1;
+		goto end;
         }
                          
         dup = strdup(buf+sizeof(struct sflap_hdr));
@@ -538,7 +538,7 @@ int toc_callback(int fd)
 		}
 		
 		if (!b)
-			return -2;
+			goto end;
 
 		
 		if (!strcasecmp(in, "T")) {
@@ -672,7 +672,8 @@ int toc_callback(int fd)
 		/* toc_debug_printf(""); */
 		free(args);	
 	}
-	return 1;
+ end:
+	return;
 }
 
 char *toc_wait_config()

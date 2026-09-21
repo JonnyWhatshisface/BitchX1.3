@@ -462,7 +462,7 @@ irc.BitchX.com *** Notice -- Nick collision on nickserv(irc.distracted.net <-
 		    else sscanf(p, "%s was %s from %s", for_, fr, temp);
 
 		    q = p;
-		    sprintf(q, "%s@%s", fr, temp);
+		    snprintf(q, strlen(p) + 1, "%s@%s", fr, temp);
 		    if (!conn) 
 		    {
 			port = strstr(temp2, "reason:");
@@ -827,7 +827,7 @@ void load_scripts(void)
 #define SCRIPT_PATH "/usr/local/lib/bx/script"
 #endif
 		window_display = 0;
-		sprintf(buffer, "%s/bxglobal", SCRIPT_PATH);
+		snprintf(buffer, BIG_BUFFER_SIZE+1, "%s/bxglobal", SCRIPT_PATH);
 		loading_global = 1;
 		load("LOAD", buffer, empty_string, NULL);
 		loading_global = 0;

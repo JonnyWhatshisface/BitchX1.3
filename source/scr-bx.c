@@ -212,7 +212,7 @@ int doit = 0;
 			continue;
 		if (dir->d_name[0] == '.')
 			continue;
-		sprintf(buffer, "%s/%s", new_path, dir->d_name);
+		snprintf(buffer, BIG_BUFFER_SIZE/8+1, "%s/%s", new_path, dir->d_name);
 		if ((stat(buffer, &st) == -1))
 			continue;
 		if (arg && strstr(dir->d_name, arg))
@@ -264,7 +264,7 @@ int count = 0;
 			continue;
 		if (dir->d_name[0] == '.')
 			continue;
-		sprintf(ret, "%s/%s", new_path, dir->d_name);
+		snprintf(ret, 2000, "%s/%s", new_path, dir->d_name);
 		p = strrchr(ret, '/'); p++;
 		if ((stat(ret, &st) == -1) || (st.st_uid != getuid()) || S_ISDIR(st.st_mode))
 		{
@@ -550,7 +550,7 @@ char *stripdev(char *ttynam)
 	if (!strncmp(ttynam, "/dev/pts", 8) && ttynam[8] >= '0' && ttynam[8] <= '9')
 	{
 		static char b[13];
-		sprintf(b, "pts/%d", atoi(ttynam + 8));
+		snprintf(b, 13, "pts/%d", atoi(ttynam + 8));
 		return b;
 	}
 #endif /* SVR4 */
@@ -566,7 +566,7 @@ void init_socketpath(void)
 struct stat st;
 extern char socket_path[], attach_ttyname[];
 
-	sprintf(socket_path, "%s/.BitchX/screens", getenv("HOME"));
+	snprintf(socket_path, 500, "%s/.BitchX/screens", getenv("HOME"));
 	if (access(socket_path, F_OK))
 		return;
 	if (stat(socket_path, &st) != -1)
@@ -579,7 +579,7 @@ extern char socket_path[], attach_ttyname[];
 		if ((ap = strchr(host, '.')))
 			*ap = 0;
 		ap = &socket_path[strlen(socket_path)];
-		sprintf(ap, "/%%d.%s.%s", stripdev(attach_ttyname), host);
+		snprintf(ap, 500 - strlen(socket_path), "/%%d.%s.%s", stripdev(attach_ttyname), host);
 		ap++;
 		for ( ; *ap; ap++)
 			if (*ap == '/')

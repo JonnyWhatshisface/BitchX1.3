@@ -2867,7 +2867,7 @@ char *BX_stripdev(char *ttynam)
 	if (!strncmp(ttynam, "/dev/pts", 8) && ttynam[8] >= '0' && ttynam[8] <= '9')
 	{
 		static char b[13];
-		sprintf(b, "pts/%d", atoi(ttynam + 8));
+		snprintf(b, 13, "pts/%d", atoi(ttynam + 8));
 		return b;
 	}
 #endif /* SVR4 */
@@ -2883,7 +2883,7 @@ void init_socketpath(void)
 struct stat st;
 extern char socket_path[], attach_ttyname[];
 
-	sprintf(socket_path, "%s/.BitchX/screens", my_path);
+	snprintf(socket_path, 500, "%s/.BitchX/screens", my_path);
 	if (access(socket_path, F_OK))
 	{
 		if (mkdir(socket_path, 0700) != -1)
@@ -2901,7 +2901,7 @@ extern char socket_path[], attach_ttyname[];
 		if ((ap = strchr(host, '.')))
 			*ap = 0;
 		ap = &socket_path[strlen(socket_path)];
-		sprintf(ap, "/%%d.%s.%s", stripdev(attach_ttyname), host);
+		snprintf(ap, 500 - strlen(socket_path), "/%%d.%s.%s", stripdev(attach_ttyname), host);
 		ap++;
 		for ( ; *ap; ap++)
 			if (*ap == '/')
@@ -3075,7 +3075,7 @@ char buffer[40];
 static char buff[40];
 char *s = buff;
 int i = 0, j = 0, len;
-	sprintf(buffer, "%ld", val);
+	snprintf(buffer, 40, "%ld", val);
 	len = strlen(buffer);
 	for (i = len % 3; i > 0; i--)
 		*s++ = buffer[j++];	 
@@ -3098,7 +3098,7 @@ char buffer[40];
 static char buff[40];
 char *s = buff;
 int i = 0, j = 0, len;
-	sprintf(buffer, "%lu", val);
+	snprintf(buffer, 40, "%lu", val);
 	len = strlen(buffer);
 	for (i = len % 3; i > 0; i--)
 		*s++ = buffer[j++];	 

@@ -279,7 +279,7 @@ char buffer[BIG_BUFFER_SIZE+1];
 		{
 			if (my_stricmp(local[i].name, cmd))
 				continue;
-			sprintf(buffer, "CDCC %s", cmd);
+			snprintf(buffer, BIG_BUFFER_SIZE+1, "CDCC %s", cmd);
 			userage(buffer, local[i].help?local[i].help:" - No help available");
 			done++;
 		}
@@ -667,11 +667,11 @@ static int r_list(char *from, char *args)
 	char *type_msg __attribute__((unused));
 	int once = 0;
 
-	sprintf(mrate_out, "%1.3g", dcc_max_rate_out);
-	sprintf(mrate_in, "%1.3g", dcc_max_rate_in);
-	sprintf(bytes_out, "%1.3g", dcc_bytes_out);
-	sprintf(bytes_in, "%1.3g", dcc_bytes_in);
-	sprintf(speed_out, "%1.3g", cdcc_minspeed);
+	snprintf(mrate_out, 30, "%1.3g", dcc_max_rate_out);
+	snprintf(mrate_in, 30, "%1.3g", dcc_max_rate_in);
+	snprintf(bytes_out, 30, "%1.3g", dcc_bytes_out);
+	snprintf(bytes_in, 30, "%1.3g", dcc_bytes_in);
+	snprintf(speed_out, 30, "%1.3g", cdcc_minspeed);
 
 	type_msg = (do_notice_list)? "NOTICE":"PRIVMSG";
 
@@ -694,10 +694,10 @@ static int r_list(char *from, char *args)
 				queue_send_to_server(from_server, "NOTICE %s :    [%d pack%s]", from, cdcc_numpacks,plural(cdcc_numpacks));
 		}
 	 	if (ptr->size / 1024 > 999)
-			sprintf(size, "\002%4.1f\002mb",
+			snprintf(size, 30, "\002%4.1f\002mb",
 				(((double)ptr->size) / 1024) / 1024);
 		else
-			sprintf(size, "\002%4.1f\002kb", (((double)ptr->size) / 1024)); 
+			snprintf(size, 30, "\002%4.1f\002kb", (((double)ptr->size) / 1024)); 
 				
 		if (do_hook(CDCC_PACK_LIST, "%s %s %d %d %lu %d %s", 
 			"NOTICE", from, ptr->num, ptr->numfiles, ptr->size, ptr->gets, ptr->desc))
@@ -823,7 +823,7 @@ static int l_list(char *args, char *rest)
 		put_it("%s", convert_output_format("#   files    size     gets minspeed  description", NULL, NULL));
 		for (ptr = offerlist; ptr; ptr = ptr->next) 
 		{
-			sprintf(temp, "%4.1f", _GMKv(ptr->size));
+			snprintf(temp, 30, "%4.1f", _GMKv(ptr->size));
 /* buggy SUNOS doesn't like this next line at all. Why?
 			sprintf(temp2, "%4.1f", (double)(ptr->minspeed));*/
 			put_it("%-2d    \002%3d\002  %6s%-4s \002%4d\002     0.0  %s",
@@ -883,11 +883,11 @@ int l_plist(char *args, char *rest)
 	blocksize = get_int_var(DCC_BLOCK_SIZE_VAR);
 	maxqueue = get_int_var(DCC_QUEUE_LIMIT_VAR);
 	set_display_target(chan, LOG_CRAP);
-	sprintf(mrate_out, "%1.3g", dcc_max_rate_out);
-	sprintf(mrate_in, "%1.3g", dcc_max_rate_in);
-	sprintf(bytes_out, "%1.3g", dcc_bytes_out);
-	sprintf(bytes_in, "%1.3g", dcc_bytes_in);
-	sprintf(speed_out, "%1.3g", cdcc_minspeed);
+	snprintf(mrate_out, 30, "%1.3g", dcc_max_rate_out);
+	snprintf(mrate_in, 30, "%1.3g", dcc_max_rate_in);
+	snprintf(bytes_out, 30, "%1.3g", dcc_bytes_out);
+	snprintf(bytes_in, 30, "%1.3g", dcc_bytes_in);
+	snprintf(speed_out, 30, "%1.3g", cdcc_minspeed);
 	if (do_hook(CDCC_PREPACK_LIST, "%s %s %s %d %d %d %d %d %s %s %s %s %lu %s", type_msg, chan, get_server_nickname(from_server), cdcc_numpacks, get_int_var(DCC_SEND_LIMIT_VAR)-get_active_count(), get_int_var(DCC_SEND_LIMIT_VAR), numqueue, get_int_var(DCC_QUEUE_LIMIT_VAR), mrate_out, bytes_out, mrate_in, bytes_in, total_size_of_packs, speed_out))
 	{
 		if (get_int_var(QUEUE_SENDS_VAR))
@@ -916,10 +916,10 @@ int l_plist(char *args, char *rest)
 	for (ptr = offerlist; ptr; ptr = ptr->next) 
 	{
 	 	if (ptr->size / 1024 > 999)
-			sprintf(size, "\002%3.2f\002mb",
+			snprintf(size, 20, "\002%3.2f\002mb",
 				(float) (ptr->size / 1024) / 1024);
 		else
-			sprintf(size, "\002%3.2f\002kb", (float) ptr->size / 1024); 
+			snprintf(size, 20, "\002%3.2f\002kb", (float) ptr->size / 1024); 
 				
 		if (do_hook(CDCC_PACK_LIST, "%s %s %d %d %lu %d %s", 
 			type_msg, chan, ptr->num, ptr->numfiles, ptr->size, ptr->gets, ptr->desc))
@@ -983,11 +983,11 @@ static int l_notice(char *args, char *rest)
 		malloc_strcpy(&chan, get_current_channel_by_refnum(0));
 
 	set_display_target(chan, LOG_CRAP);	
-	sprintf(mrate_out, "%1.3g", dcc_max_rate_out);
-	sprintf(mrate_in, "%1.3g", dcc_max_rate_in);
-	sprintf(bytes_out, "%1.3g", dcc_bytes_out);
-	sprintf(bytes_in, "%1.3g", dcc_bytes_in);
-	sprintf(speed_out, "%1.3g", cdcc_minspeed);
+	snprintf(mrate_out, 30, "%1.3g", dcc_max_rate_out);
+	snprintf(mrate_in, 30, "%1.3g", dcc_max_rate_in);
+	snprintf(bytes_out, 30, "%1.3g", dcc_bytes_out);
+	snprintf(bytes_in, 30, "%1.3g", dcc_bytes_in);
+	snprintf(speed_out, 30, "%1.3g", cdcc_minspeed);
 	if (do_hook(CDCC_PREPACK_LIST, "%s %s %s %d %d %d %d %d %s %s %s %s %lu %s", "NOTICE", chan, get_server_nickname(from_server), cdcc_numpacks, get_int_var(DCC_SEND_LIMIT_VAR)-get_active_count(), get_int_var(DCC_SEND_LIMIT_VAR), numqueue, get_int_var(DCC_QUEUE_LIMIT_VAR), mrate_out, bytes_out, mrate_in, bytes_in, total_size_of_packs, speed_out))
 	{
 		malloc_sprintf(&string, "\037[\037cdcc\037]\037 \002%d\002 file%s offered\037-\037 \037\"\037/ctcp \002%s\002 cdcc list\037\"\037 for pack list",   
@@ -1307,9 +1307,9 @@ static void add_files(char *args, char *rest)
 		{
 			if (!dir->d_ino || !wild_match(fptr, dir->d_name))
 				continue;
-			sprintf(temp, "%s/%s", expand, dir->d_name);
+			snprintf(temp, 30, "%s/%s", expand, dir->d_name);
 			stat(temp, &statbuf);
-			sprintf(temp, "\"%s/%s\"", expand, dir->d_name);
+			snprintf(temp, 30, "\"%s/%s\"", expand, dir->d_name);
 			if (filebuf)
 				malloc_strcat(&filebuf, space);
 			malloc_strcat(&filebuf, temp);
@@ -1337,7 +1337,7 @@ static void add_files(char *args, char *rest)
 	set_int_var(_CDCC_PACKS_OFFERED_VAR, cdcc_numpacks);
 	malloc_strcpy(&newpack->file, filebuf);
 
-	sprintf(temp, "Description of pack #%d : ", cdcc_numpacks);
+	snprintf(temp, 30, "Description of pack #%d : ", cdcc_numpacks);
 	add_wait_prompt(temp, add_desc, empty_string, WAIT_PROMPT_LINE, 1);
 
 	new_free(&expand);
@@ -1375,9 +1375,9 @@ static void add_desc(char *args, char *rest)
 	newpack->next = NULL;
 			
 	if (newpack->size / 1024 > 999)
-		sprintf(size, "\002%3.2f\002mb", (double) (newpack->size / 1024) / 1024);
+		snprintf(size, 20, "\002%3.2f\002mb", (double) (newpack->size / 1024) / 1024);
 	else
-		sprintf(size, "\002%3.2f\002kb", (double) newpack->size / 1024); 
+		snprintf(size, 20, "\002%3.2f\002kb", (double) newpack->size / 1024); 
 	put_it("%s: added pack #\002%d\002, \002%d\002 file%s (%s)", cparse(get_string_var(CDCC_PROMPT_VAR)),
 		newpack->num, newpack->numfiles,
 		plural(newpack->numfiles == 1), size);
@@ -1817,7 +1817,7 @@ static int l_echo(char *args, char *rest)
 static int l_stats(char *args, char *rest)
 {
 	char cdcc_minspeed_s[80];
-	sprintf(cdcc_minspeed_s, "%1.3f", cdcc_minspeed);
+	snprintf(cdcc_minspeed_s, 80, "%1.3f", cdcc_minspeed);
 	put_it("%s",convert_output_format("       %G������������������������%K[%C    cdcc stat     %K]%G���������������������͸", NULL));
 	put_it("%s",convert_output_format("       %G�                                                                 �", NULL));
 	put_it("%s",convert_output_format("       %G�%g��%K[%Cp%ctimer  %K]%g��-%K[%Ct%cype     %K]%gķ�%K[%Ct%cotal %Cp%cacks%K]%g���%K[%Cs%cent  %K]%gķ�[%Cq%cueue%K]%gķ%G�", NULL));

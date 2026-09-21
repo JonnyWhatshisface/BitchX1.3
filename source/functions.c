@@ -820,14 +820,14 @@ int i = 0;
 char str[80];
 	while (built_in_functions[i].func)
 	{
-		sprintf(str, "_%s", built_in_functions[i].name);
+		snprintf(str, 80, "_%s", built_in_functions[i].name);
 		Tcl_CreateCommand(tcl_interp, lower(str), func1?func1:built_in_functions[i].func, NULL, NULL);
 		i++;
 	}
 	i = 0;
 	while (built_in[i].func)
 	{
-		sprintf(str, "_%c", built_in[i].name);
+		snprintf(str, 80, "_%c", built_in[i].name);
 		Tcl_CreateCommand(tcl_interp, str, func2?func2:built_in[i].func, NULL, NULL);
 		i++;
 	}
@@ -1430,17 +1430,17 @@ BUILT_IN_FUNCTION(function_tdiff, input)
 
 		if (days)
 		{
-			sprintf(tstr, "%ld day%s ", days, plural(days));
+			snprintf(tstr, (tmp + strlen(input) + 180) - tstr, "%ld day%s ", days, plural(days));
 			tstr += strlen(tstr);
 		}
 		if (hours)
 		{
-			sprintf(tstr, "%ld hour%s ", hours, plural(hours));
+			snprintf(tstr, (tmp + strlen(input) + 180) - tstr, "%ld hour%s ", hours, plural(hours));
 			tstr += strlen(tstr);
 		}
 		if (minutes)
 		{
-			sprintf(tstr, "%ld minute%s ", minutes, plural(minutes));
+			snprintf(tstr, (tmp + strlen(input) + 180) - tstr, "%ld minute%s ", minutes, plural(minutes));
 			tstr += strlen(tstr);
 		}
 	}
@@ -1463,9 +1463,9 @@ BUILT_IN_FUNCTION(function_tdiff, input)
 		if (seconds != 0 || number != 0)
 		{
 			if (number == 0)
-				sprintf(tstr, "%ld second%s", seconds, plural(seconds));
+				snprintf(tstr, (tmp + strlen(input) + 180) - tstr, "%ld second%s", seconds, plural(seconds));
 			else
-				sprintf(tstr, "%ld%s seconds", seconds, after);
+				snprintf(tstr, (tmp + strlen(input) + 180) - tstr, "%ld%s seconds", seconds, after);
 		}
 	}
 	else
@@ -3794,10 +3794,10 @@ BUILT_IN_FUNCTION(function_truncate, words)
 		float foo;
 		int end;
 
-		sprintf(format, "%%.%de", -num-1);
-		sprintf(buffer, format, value);
+		snprintf(format, BIG_BUFFER_SIZE, "%%.%de", -num-1);
+		snprintf(buffer, BIG_BUFFER_SIZE, format, value);
 		foo = atof(buffer);
-		sprintf(buffer, "%f", foo);
+		snprintf(buffer, BIG_BUFFER_SIZE, "%f", foo);
 		end = strlen(buffer) - 1;
 		if (end == 0)
 			RETURN_EMPTY;
@@ -3809,8 +3809,8 @@ BUILT_IN_FUNCTION(function_truncate, words)
 	}
 	else if (num > 0)
 	{
-		sprintf(format, "%%10.%dlf", num);
-		sprintf(buffer, format, value);
+		snprintf(format, BIG_BUFFER_SIZE, "%%10.%dlf", num);
+		snprintf(buffer, BIG_BUFFER_SIZE, format, value);
 	}
 	else
 		RETURN_EMPTY;
@@ -3854,22 +3854,22 @@ BUILT_IN_FUNCTION(function_tdiff2, input)
 
 	if (days)
 	{
-		sprintf(tstr, "%ldd ", days);
+		snprintf(tstr, 80, "%ldd ", days);
 		tstr += strlen(tstr);
 	}
 	if (hours)
 	{
-		sprintf(tstr, "%ldh ", hours);
+		snprintf(tstr, 80, "%ldh ", hours);
 		tstr += strlen(tstr);
 	}
 	if (minutes)
 	{
-		sprintf(tstr, "%ldm ", minutes);
+		snprintf(tstr, 80, "%ldm ", minutes);
 		tstr += strlen(tstr);
 	}
 	if (seconds || (!days && !hours && !minutes))
 	{
-		sprintf(tstr, "%lds", seconds);
+		snprintf(tstr, 80, "%lds", seconds);
 		tstr += strlen(tstr);
 	}
 	else
@@ -4291,7 +4291,7 @@ BUILT_IN_FUNCTION(function_uptime, input)
 	ltime = (ltime - minutes) / 60;
 	hours = ltime % 24;
 	days = (ltime - hours) / 24;
-	sprintf(buffer, "%ldd %ldh %ldm %lds", days, hours, minutes, seconds);
+	snprintf(buffer, BIG_BUFFER_SIZE+1, "%ldd %ldh %ldm %lds", days, hours, minutes, seconds);
 	RETURN_STR(buffer);
 }
 
@@ -6747,12 +6747,12 @@ BUILT_IN_FUNCTION(function_screensize, input)
 {
 char retbuffer[50];
 
-	if (!my_stricmp(input, "cx"))
-		sprintf(retbuffer, "%d", gui_screen_width());
-	else if (!my_stricmp(input, "cy"))
-		sprintf(retbuffer, "%d", gui_screen_height());
-	else
-		sprintf(retbuffer, "%d %d", gui_screen_width(), gui_screen_height());
+		if (!my_stricmp(input, "cx"))
+			snprintf(retbuffer, 50, "%d", gui_screen_width());
+		else if (!my_stricmp(input, "cy"))
+			snprintf(retbuffer, 50, "%d", gui_screen_height());
+		else
+			snprintf(retbuffer, 50, "%d %d", gui_screen_width(), gui_screen_height());
 
 	RETURN_STR(retbuffer);
 }
