@@ -61,6 +61,8 @@ CVS_REVISION(parse_c)
 #define ID_CHANNEL '!'
 
 static	void	strip_modes (char *, char *, char *);
+void add_user_who (WhoEntry *w, char *from, char **ArgList);
+void add_user_end (WhoEntry *w, char *from, char **ArgList);
 
 	char *last_split_server = NULL;
 	char *last_split_from = NULL;
@@ -887,39 +889,179 @@ static	void p_error(char *from, char **ArgList)
 	say("%s", ArgList[0]);
 }
 
-/*
- * This only handles negotiating the SASL capability with the PLAIN method. It would
- * be good to add DH-BLOWFISH, and later, full capability support.
- */
-static	void p_cap(char *from, char **ArgList)
+static void parse_cap_value(const char *cap, char **name, const char **value)
+{
+	const char *eq;
+
+	if (name)
+		*name = NULL;
+	if (value)
+		*value = NULL;
+
+	if (!cap || !*cap)
+		return;
+
+	eq = strchr(cap, '=');
+	if (eq)
+	{
+		if (name)
+		{
+			*name = alloca(eq - cap + 1);
+			strlcpy(*name, cap, eq - cap + 1);
+		}
+		if (value)
+			*value = eq + 1;
+	}
+	else
+	{
+		if (name)
+			*name = m_strdup(cap);
+		if (value)
+			*value = NULL;
+	}
+}
+
+static void p_cap_ls(char *from, char **ArgList)
 {
 	char *caps, *p;
 
-	if (!strcmp(ArgList[1], "ACK"))
+	caps = LOCAL_COPY(ArgList[2]);
+	while ((p = next_arg(caps, &caps)) != NULL)
 	{
-		caps = LOCAL_COPY(ArgList[2]);
-		while ((p = next_arg(caps, &caps)) != NULL)
+		const char *value;
+		char *name;
+
+		parse_cap_value(p, &name, &value);
+		add_available_capability(from_server, name);
+
+		if (name && !strchr(p, '='))
+			new_free(&name);
+	}
+
+	if (ArgList[1][0] == '*')
+	{
+		if (ArgList[0] && strlen(ArgList[0]) >= 3 && !strcmp(&ArgList[0][0], "302"))
 		{
-			/* Only AUTHENTICATE before registration */
-			if (!strcmp(p, "sasl") && !is_server_connected(from_server))
-			{
-				my_send_to_server(from_server, "AUTHENTICATE PLAIN");
-				break;
-			}
+			set_ircv3_cap_version(from_server, 302);
 		}
+		else if (ArgList[0] && strlen(ArgList[0]) >= 3 && !strcmp(&ArgList[0][0], "303"))
+		{
+			set_ircv3_cap_version(from_server, 303);
+		}
+	}
+}
+
+static void p_cap_ack(char *from, char **ArgList)
+{
+	char *caps, *p;
+
+	caps = LOCAL_COPY(ArgList[2]);
+	while ((p = next_arg(caps, &caps)) != NULL)
+	{
+		char *cap_name = p;
+		int is_remove = 0;
+
+		if (*cap_name == '-')
+		{
+			is_remove = 1;
+			cap_name++;
+		}
+
+		if (is_remove)
+		{
+			remove_enabled_capability(from_server, cap_name);
+		}
+		else
+		{
+			add_enabled_capability(from_server, cap_name);
+		}
+
+		if (!strcmp(cap_name, "sasl") && !is_server_connected(from_server))
+		{
+			my_send_to_server(from_server, "AUTHENTICATE PLAIN");
+		}
+	}
+}
+
+static void p_cap_nak(char *from, char **ArgList)
+{
+	char *caps, *p;
+
+	caps = LOCAL_COPY(ArgList[2]);
+	while ((p = next_arg(caps, &caps)) != NULL)
+	{
+	}
+
+	set_cap_ack_pending(from_server, 0);
+
+	if (!is_server_connected(from_server))
+	{
+		my_send_to_server(from_server, "CAP END");
+	}
+}
+
+static void p_cap_new(char *from, char **ArgList)
+{
+	char *caps, *p;
+
+	caps = LOCAL_COPY(ArgList[2]);
+	while ((p = next_arg(caps, &caps)) != NULL)
+	{
+		const char *value;
+		char *name;
+
+		parse_cap_value(p, &name, &value);
+		add_available_capability(from_server, name);
+
+		if (name && !strchr(p, '='))
+			new_free(&name);
+	}
+}
+
+static void p_cap_del(char *from, char **ArgList)
+{
+	char *caps, *p;
+
+	caps = LOCAL_COPY(ArgList[2]);
+	while ((p = next_arg(caps, &caps)) != NULL)
+	{
+		remove_enabled_capability(from_server, p);
+	}
+}
+
+static void p_cap_end(char *from, char **ArgList)
+{
+	end_cap_negotiation(from_server);
+}
+
+static void p_cap(char *from, char **ArgList)
+{
+	if (!ArgList[1] || !*ArgList[1])
+		return;
+
+	if (!strcmp(ArgList[1], "LS"))
+	{
+		p_cap_ls(from, ArgList);
+	}
+	else if (!strcmp(ArgList[1], "ACK"))
+	{
+		p_cap_ack(from, ArgList);
 	}
 	else if (!strcmp(ArgList[1], "NAK"))
 	{
-		caps = LOCAL_COPY(ArgList[2]);
-		while ((p = next_arg(caps, &caps)) != NULL)
-		{
-			/* End capability negotiation to continue registration */
-			if (!strcmp(p, "sasl") && !is_server_connected(from_server))
-			{
-				my_send_to_server(from_server, "CAP END");
-				break;
-			}
-		}
+		p_cap_nak(from, ArgList);
+	}
+	else if (!strcmp(ArgList[1], "NEW"))
+	{
+		p_cap_new(from, ArgList);
+	}
+	else if (!strcmp(ArgList[1], "DEL"))
+	{
+		p_cap_del(from, ArgList);
+	}
+	else if (!strcmp(ArgList[1], "END"))
+	{
+		p_cap_end(from, ArgList);
 	}
 }
 
@@ -928,17 +1070,30 @@ static	void p_authenticate(char *from, char **ArgList)
 	char buf[512];
 	char *output = NULL;
 	char *nick, *pass;
+	const char *auth_data;
 
-	/* "AUTHENTICATE command MUST be used before registration is complete" */
-	if (is_server_connected(from_server))
+	if (!ArgList[0] || !*ArgList[0])
 		return;
 
 	if (!strcmp(ArgList[0], "+"))
 	{
+		auth_data = ArgList[1];
+
+		if (!auth_data || !*auth_data || !strcmp(auth_data, "*"))
+		{
+			my_send_to_server(from_server, "AUTHENTICATE *");
+			return;
+		}
+
+		if (strlen(auth_data) > 400)
+		{
+			my_send_to_server(from_server, "AUTHENTICATE +");
+			return;
+		}
+
 		nick = get_server_sasl_nick(from_server);
 		pass = get_server_sasl_pass(from_server);
 
-		/* "The client can abort an authentication by sending an asterisk as the data" */
 		if (!nick || !pass)
 		{
 			my_send_to_server(from_server, "AUTHENTICATE *");
@@ -952,39 +1107,56 @@ static	void p_authenticate(char *from, char **ArgList)
 		if (my_base64_encode(buf, strlen(nick) * 2 + strlen(pass) + 2, &output) != -1)
 		{
 			my_send_to_server(from_server, "AUTHENTICATE %s", output);
-// XXX			new_free(&output);
 			free(output);
 		}
 		else
 			my_send_to_server(from_server, "AUTHENTICATE *");
 	}
+	else if (!strcmp(ArgList[0], "*"))
+	{
+		my_send_to_server(from_server, "AUTHENTICATE *");
+	}
 }
 
-void add_user_who (WhoEntry *w, char *from, char **ArgList)
+static void p_away(char *from, char **ArgList)
 {
-	char *userhost;
-	ChannelList *chan __attribute__((unused));
-	int op = 0, voice = 0;
-
-	/* Obviously this is safe. */
-	userhost = alloca(strlen(ArgList[1]) + strlen(ArgList[2]) + 2);
-	snprintf(userhost, strlen(ArgList[1]) + strlen(ArgList[2]) + 2, "%s@%s", ArgList[1], ArgList[2]);
-	voice = (strchr(ArgList[5], '+') != NULL);
-	op = (strchr(ArgList[5], '@') != NULL);
-	chan = add_to_channel(ArgList[0], ArgList[4], from_server, op, voice, userhost, ArgList[3], ArgList[5], 0, ArgList[6] ? my_atol(ArgList[6]) : 0);
-#ifdef WANT_NSLOOKUP
-	if (get_int_var(AUTO_NSLOOKUP_VAR))
-		do_nslookup(ArgList[2], ArgList[4], ArgList[1], ArgList[0], from_server, auto_nslookup, NULL);
-#endif	
+	if (from && *from)
+	{
+		if (ArgList[0] && *ArgList[0])
+		{
+			say("%s has gone away: %s", from, ArgList[0]);
+		}
+		else
+		{
+			say("%s is back", from);
+		}
+	}
+	else if (ArgList[0] && *ArgList[0])
+	{
+		say("You have gone away: %s", ArgList[0]);
+	}
+	else
+	{
+		say("You are no longer away");
+	}
 }
 
-void add_user_end (WhoEntry *w, char *from, char **ArgList)
+static void p_account(char *from, char **ArgList)
 {
-	got_info(ArgList[0], from_server, GOTWHO);
-	/* Nothing to do! */
+	if (from && *from)
+	{
+		if (ArgList[0] && *ArgList[0] && strcmp(ArgList[0], "*"))
+		{
+			say("%s is now logged in as %s", from, ArgList[0]);
+		}
+		else
+		{
+			say("%s has logged out", from);
+		}
+	}
 }
 
-static	void p_channel(char *from, char **ArgList)
+static void p_channel_extended(char *from, char **ArgList)
 {
 	char	*channel;
 	ChannelList *chan = NULL;
@@ -997,8 +1169,8 @@ static	void p_channel(char *from, char **ArgList)
 	Window *old_window = current_window;
 	int switched = 0;
 	irc_server *irc_serv = NULL;
-	
-	
+	char *account = NULL;
+
 	if (!strcmp(ArgList[0], zero))
 	{
 		fake();
@@ -1009,9 +1181,11 @@ static	void p_channel(char *from, char **ArgList)
 	set_display_target(channel, LOG_CRAP);
 	malloc_strcpy(&joined_nick, from);
 
-	/*
-	 * Workaround for gratuitous protocol change in ef2.9
-	 */
+	if (has_capability(from_server, "extended-join") && ArgList[3])
+	{
+		account = ArgList[3];
+	}
+
 	*extra = 0;
 	if ((c = strchr(channel, '\007')))
 	{
@@ -1025,7 +1199,7 @@ static	void p_channel(char *from, char **ArgList)
 		strcat(extra, " (+o)");
 	if (vo)
 		strcat(extra, " (+v)");
-                                                
+                                                 
 	if (!my_stricmp(from, get_server_nickname(from_server)))
 	{
 		int refnum;
@@ -1069,19 +1243,27 @@ static	void p_channel(char *from, char **ArgList)
 	{
 		if ((whowas = check_whosplitin_buffer(from, FromUserHost, channel, 0)))
 			irc_serv = check_split_server(whowas->server1);
-		chan = add_to_channel(channel, from, from_server, op, vo, FromUserHost, NULL, NULL, whowas && irc_serv ? 1 : 0, 0);
+		chan = add_to_channel(channel, from, from_server, op, vo, FromUserHost, account, NULL, whowas && irc_serv ? 1 : 0, 0);
 		if (whowas && whowas->server2 && irc_serv)
 			new_free(&whowas->server2);
 
 #ifdef WANT_TCL
 		check_tcl_join(from, FromUserHost, from, channel);
 #endif
-		logmsg(LOG_JOIN, from, 0, "%s %s %s", FromUserHost, channel, extra);
-		do_logchannel(LOG_JOIN, chan, "%s, %s %s %s", from, FromUserHost, channel, extra);
+		if (account && *account && strcmp(account, "*"))
+		{
+			logmsg(LOG_JOIN, from, 0, "%s (%s) %s", FromUserHost, account, channel);
+			do_logchannel(LOG_JOIN, chan, "%s (%s) %s", from, account, channel);
+		}
+		else
+		{
+			logmsg(LOG_JOIN, from, 0, "%s %s", FromUserHost, channel);
+			do_logchannel(LOG_JOIN, chan, "%s, %s %s %s", from, FromUserHost, channel, extra);
+		}
 		if (!irc_serv)
 			check_channel_limit(chan);
 	}
-			
+				
 #ifdef WANT_USERLIST
 	if (!in_join_list(channel, from_server) && chan)
 		tmpnick = check_auto(channel, find_nicklist_in_channellist(from, chan, 0), chan);
@@ -1172,6 +1354,30 @@ static	void p_channel(char *from, char **ArgList)
 	notify_mark(from, FromUserHost, 1, 0);
 	if (switched)
 		make_window_current(old_window);
+}
+
+void add_user_who (WhoEntry *w, char *from, char **ArgList)
+{
+	char *userhost;
+	ChannelList *chan __attribute__((unused));
+	int op = 0, voice = 0;
+
+	/* Obviously this is safe. */
+	userhost = alloca(strlen(ArgList[1]) + strlen(ArgList[2]) + 2);
+	snprintf(userhost, strlen(ArgList[1]) + strlen(ArgList[2]) + 2, "%s@%s", ArgList[1], ArgList[2]);
+	voice = (strchr(ArgList[5], '+') != NULL);
+	op = (strchr(ArgList[5], '@') != NULL);
+	chan = add_to_channel(ArgList[0], ArgList[4], from_server, op, voice, userhost, ArgList[3], ArgList[5], 0, ArgList[6] ? my_atol(ArgList[6]) : 0);
+#ifdef WANT_NSLOOKUP
+	if (get_int_var(AUTO_NSLOOKUP_VAR))
+		do_nslookup(ArgList[2], ArgList[4], ArgList[1], ArgList[0], from_server, auto_nslookup, NULL);
+#endif	
+}
+
+void add_user_end (WhoEntry *w, char *from, char **ArgList)
+{
+	got_info(ArgList[0], from_server, GOTWHO);
+	/* Nothing to do! */
 }
 
 void check_auto_join(int server, char *from, char *channel, char *key)
@@ -1831,8 +2037,9 @@ static void p_rpong (char *from, char **ArgList)
 
 protocol_command rfc1459[] = {
 {	"ADMIN",	NULL,		NULL,		0,		0, 0},
+{	"ACCOUNT",	p_account,	NULL,		0,		0, 0},
 {	"AUTHENTICATE",	p_authenticate,	NULL,		0,		0, 0},
-{	"AWAY",		NULL,		NULL,		0,		0, 0},
+{	"AWAY",		p_away,		NULL,		0,		0, 0},
 {	"CAP",		p_cap,		NULL,		0,		0, 0},
 { 	"CONNECT",	NULL,		NULL,		0,		0, 0},
 {	"ERROR",	p_error,	NULL,		0,		0, 0},
@@ -1840,7 +2047,7 @@ protocol_command rfc1459[] = {
 {	"INVITE",	p_invite,	NULL,		0,		0, 0},
 {	"INFO",		NULL,		NULL,		0,		0, 0},
 {	"ISON",		NULL,		NULL,		PROTO_NOQUOTE,	0, 0},
-{	"JOIN",		p_channel,	NULL,		PROTO_DEPREC,	0, 0},
+{	"JOIN",		p_channel_extended,	NULL,		PROTO_DEPREC,	0, 0},
 {	"KICK",		p_kick,		NULL,		0,		0, 0},
 {	"KILL",		p_kill,		NULL,		0,		0, 0},
 {	"LINKS",	NULL,		NULL,		0,		0, 0},
@@ -1899,10 +2106,13 @@ void parse_server(char *orig_line)
 		*end;
 	int	numeric;
 	char	*line = NULL;
+	char	*line_copy = NULL;
 	int	len = 0;
 	char	**ArgList;
 	char	copy[BIG_BUFFER_SIZE+1];
 	char	*TrueArgs[MAXPARA + 1] = {NULL};
+	char	*tags = NULL;
+	char	*server_time = NULL;
 
 #ifdef WANT_DLL
 	RawDll	*raw = NULL;
@@ -1928,7 +2138,7 @@ void parse_server(char *orig_line)
 
 	if (x_debug & DEBUG_INBOUND)
 		yell("[%d] <- [%s]", get_server_read(from_server), orig_line);
-                                                                                                                                                                                                    
+                                                                                                                                                                                                     
 	if (*orig_line == ':')
 	{
 		if (!do_hook(RAW_IRC_LIST, "%s", orig_line + 1))
@@ -1937,21 +2147,131 @@ void parse_server(char *orig_line)
 	else if (!do_hook(RAW_IRC_LIST, "* %s", orig_line))
 		return;
 
-	if (inbound_line_mangler)
+	if (orig_line[0] == '@')
 	{
-		len = strlen(orig_line) * 3;
-		line = alloca(len + 1);
-		strcpy(line, orig_line);
-		if (mangle_line(line, inbound_line_mangler, len) > len)
-			yell("mangle_line truncated its result. Ack.");
+		char *tag_start = orig_line + 1;
+		char *tag_end = strchr(tag_start, ' ');
+		
+		if (tag_end)
+		{
+			int tag_len = tag_end - tag_start;
+			tags = alloca(tag_len + 1);
+			strlcpy(tags, tag_start, tag_len + 1);
+			
+			line_copy = alloca(len - tag_len + 1);
+			strlcpy(line_copy, tag_end + 1, len - tag_len + 1);
+			line = line_copy;
+			
+			{
+				char *tag_ptr = tags;
+				char *eq;
+				while (tag_ptr && *tag_ptr)
+				{
+					char *space = strchr(tag_ptr, ';');
+					int tag_size;
+					
+					if (space)
+					{
+						tag_size = space - tag_ptr;
+					}
+					else
+					{
+						tag_size = strlen(tag_ptr);
+					}
+					
+					eq = memchr(tag_ptr, '=', tag_size);
+					if (eq && !strncmp(tag_ptr, "time=", 5))
+					{
+						server_time = alloca(tag_size + 1);
+						strlcpy(server_time, eq + 1, tag_size - 4 + 1);
+					}
+					
+					tag_ptr = (space) ? space + 1 : NULL;
+				}
+			}
+		}
+		else
+		{
+			line = orig_line;
+		}
 	}
 	else
+	{
 		line = orig_line;
+	}
+
+	if (inbound_line_mangler)
+	{
+		int mangle_len = strlen(line) * 3;
+		char *mangled = alloca(mangle_len + 1);
+		strcpy(mangled, line);
+		if (mangle_line(mangled, inbound_line_mangler, mangle_len) > mangle_len)
+			yell("mangle_line truncated its result. Ack.");
+		line = mangled;
+	}
 
 	ArgList = TrueArgs;
 
 	strncpy(copy, line, BIG_BUFFER_SIZE);
 	BreakArgs(line, &from, ArgList, 0);
+
+	if (server_time && has_capability(from_server, "server-time"))
+	{
+		char time_buf[64];
+		strlcpy(time_buf, server_time, sizeof(time_buf));
+		{
+			char *year_str = time_buf;
+			char *month_str = strchr(year_str, '-');
+			char *day_str = NULL;
+			char *hour_str = NULL;
+			char *min_str = NULL;
+			char *sec_str = NULL;
+			struct tm tm_time;
+			time_t ts;
+			
+			if (month_str) { *month_str = 0; month_str++; }
+			if (month_str) {
+				day_str = strchr(month_str, '-');
+				if (day_str) { *day_str = 0; day_str++; }
+			}
+			if (day_str) {
+				hour_str = strchr(day_str, 'T');
+				if (hour_str) { *hour_str = 0; hour_str++; }
+			}
+			if (hour_str) {
+				min_str = strchr(hour_str, ':');
+				if (min_str) { *min_str = 0; min_str++; }
+			}
+			if (min_str) {
+				sec_str = strchr(min_str, ':');
+				if (sec_str) { *sec_str = 0; sec_str++; }
+			}
+			
+			memset(&tm_time, 0, sizeof(tm_time));
+			tm_time.tm_year = atoi(year_str) - 1900;
+			tm_time.tm_mon = atoi(month_str ? month_str : "1") - 1;
+			tm_time.tm_mday = atoi(day_str ? day_str : "1");
+			tm_time.tm_hour = atoi(hour_str ? hour_str : "0");
+			tm_time.tm_min = atoi(min_str ? min_str : "0");
+			tm_time.tm_sec = atoi(sec_str ? sec_str : "0");
+			
+			ts = mktime(&tm_time);
+			if (ts > 0)
+			{
+				char timestamp[64];
+				struct tm *lt = localtime(&ts);
+				if (lt)
+				{
+					strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", lt);
+					{
+						char msg[256];
+						snprintf(msg, sizeof(msg), "*** Server time: %s", timestamp);
+						say("%s", msg);
+					}
+				}
+			}
+		}
+	}
 
 	/* XXXX - i dont think 'from' can be null here.  */
 	if (!(comm = (*ArgList++)) || !from || !*ArgList)

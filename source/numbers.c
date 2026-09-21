@@ -1414,7 +1414,6 @@ void numbered_command(char *from, int comm, char **ArgList)
 	case 906:		/* SASL authentication aborted */
 	case 907:		/* You have already completed SASL authentication */
 	{
-		my_send_to_server(from_server, "CAP END");
 		if (do_hook(current_numeric, "%s %s", from, *ArgList))
 			display_msg(from, ArgList);
 		break;

@@ -3903,3 +3903,275 @@ char *get_server_sasl_pass(int server)
 		return NULL;
 	return server_list[server].sasl_pass;
 }
+
+int get_ircv3_cap_version(int server)
+{
+	if (server <= -1 || server >= number_of_servers)
+		return 0;
+	return server_list[server].ircv3_cap_version;
+}
+
+void set_ircv3_cap_version(int server, int version)
+{
+	if (server <= -1 || server >= number_of_servers)
+		return;
+	server_list[server].ircv3_cap_version = version;
+}
+
+int get_cap_negotiating(int server)
+{
+	if (server <= -1 || server >= number_of_servers)
+		return 0;
+	return server_list[server].cap_negotiating;
+}
+
+void set_cap_negotiating(int server, int val)
+{
+	if (server <= -1 || server >= number_of_servers)
+		return;
+	server_list[server].cap_negotiating = val;
+}
+
+int get_cap_ack_pending(int server)
+{
+	if (server <= -1 || server >= number_of_servers)
+		return 0;
+	return server_list[server].cap_ack_pending;
+}
+
+void set_cap_ack_pending(int server, int val)
+{
+	if (server <= -1 || server >= number_of_servers)
+		return;
+	server_list[server].cap_ack_pending = val;
+}
+
+int get_echo_message_enabled(int server)
+{
+	if (server <= -1 || server >= number_of_servers)
+		return 0;
+	return server_list[server].echo_message_enabled;
+}
+
+void set_echo_message_enabled(int server, int val)
+{
+	if (server <= -1 || server >= number_of_servers)
+		return;
+	server_list[server].echo_message_enabled = val;
+}
+
+void start_cap_negotiation(int server)
+{
+	if (server <= -1 || server >= number_of_servers)
+		return;
+	server_list[server].cap_negotiating = 1;
+	server_list[server].cap_ack_pending = 0;
+	server_list[server].ircv3_cap_version = 0;
+}
+
+void end_cap_negotiation(int server)
+{
+	if (server <= -1 || server >= number_of_servers)
+		return;
+	server_list[server].cap_negotiating = 0;
+}
+
+void add_available_capability(int server, const char *cap)
+{
+	char **new_caps;
+	int count = 0;
+	int i;
+
+	if (server <= -1 || server >= number_of_servers)
+		return;
+	if (!cap || !*cap)
+		return;
+
+	for (i = 0; server_list[server].available_caps && server_list[server].available_caps[i]; i++)
+		count++;
+
+	new_caps = new_malloc((count + 2) * sizeof(char *));
+	for (i = 0; i < count; i++)
+		new_caps[i] = server_list[server].available_caps[i];
+	new_caps[count] = m_strdup(cap);
+	new_caps[count + 1] = NULL;
+
+	new_free(&server_list[server].available_caps);
+	server_list[server].available_caps = new_caps;
+}
+
+void add_enabled_capability(int server, const char *cap)
+{
+	char **new_caps;
+	int count = 0;
+	int i;
+
+	if (server <= -1 || server >= number_of_servers)
+		return;
+	if (!cap || !*cap)
+		return;
+
+	for (i = 0; server_list[server].enabled_caps && server_list[server].enabled_caps[i]; i++)
+		count++;
+
+	new_caps = new_malloc((count + 2) * sizeof(char *));
+	for (i = 0; i < count; i++)
+		new_caps[i] = server_list[server].enabled_caps[i];
+	new_caps[count] = m_strdup(cap);
+	new_caps[count + 1] = NULL;
+
+	new_free(&server_list[server].enabled_caps);
+	server_list[server].enabled_caps = new_caps;
+
+	if (!my_stricmp(cap, "echo-message"))
+		server_list[server].echo_message_enabled = 1;
+}
+
+void remove_enabled_capability(int server, const char *cap)
+{
+	char **new_caps;
+	int count = 0;
+	int i;
+	int j;
+
+	if (server <= -1 || server >= number_of_servers)
+		return;
+	if (!cap || !*cap)
+		return;
+
+	for (i = 0; server_list[server].enabled_caps && server_list[server].enabled_caps[i]; i++)
+	{
+		if (!my_stricmp(server_list[server].enabled_caps[i], cap))
+			continue;
+		count++;
+	}
+
+	if (count == 0)
+	{
+		new_free(&server_list[server].enabled_caps);
+		server_list[server].enabled_caps = NULL;
+		if (!my_stricmp(cap, "echo-message"))
+			server_list[server].echo_message_enabled = 0;
+		return;
+	}
+
+	new_caps = new_malloc((count + 1) * sizeof(char *));
+	j = 0;
+	for (i = 0; server_list[server].enabled_caps && server_list[server].enabled_caps[i]; i++)
+	{
+		if (!my_stricmp(server_list[server].enabled_caps[i], cap))
+			continue;
+		new_caps[j++] = server_list[server].enabled_caps[i];
+	}
+	new_caps[j] = NULL;
+
+	for (i = 0; i < j; i++)
+		new_free(&server_list[server].enabled_caps[i]);
+	new_free(&server_list[server].enabled_caps);
+	server_list[server].enabled_caps = new_caps;
+
+	if (!my_stricmp(cap, "echo-message"))
+		server_list[server].echo_message_enabled = 0;
+}
+
+int has_capability(int server, const char *cap)
+{
+	int i;
+
+	if (server <= -1 || server >= number_of_servers)
+		return 0;
+	if (!cap || !*cap)
+		return 0;
+	if (!server_list[server].enabled_caps)
+		return 0;
+
+	for (i = 0; server_list[server].enabled_caps[i]; i++)
+	{
+		if (!my_stricmp(server_list[server].enabled_caps[i], cap))
+			return 1;
+	}
+	return 0;
+}
+
+void clear_capabilities(int server)
+{
+	int i;
+
+	if (server <= -1 || server >= number_of_servers)
+		return;
+
+	if (server_list[server].available_caps)
+	{
+		for (i = 0; server_list[server].available_caps[i]; i++)
+			new_free(&server_list[server].available_caps[i]);
+		new_free(&server_list[server].available_caps);
+	}
+	if (server_list[server].enabled_caps)
+	{
+		for (i = 0; server_list[server].enabled_caps[i]; i++)
+			new_free(&server_list[server].enabled_caps[i]);
+		new_free(&server_list[server].enabled_caps);
+	}
+	server_list[server].available_caps = NULL;
+	server_list[server].enabled_caps = NULL;
+	server_list[server].echo_message_enabled = 0;
+	server_list[server].ircv3_cap_version = 0;
+}
+
+void request_capabilities(int server)
+{
+	char cap_buf[BIG_BUFFER_SIZE];
+	char *ptr = cap_buf;
+	int i;
+	int has_sasl = 0;
+
+	if (server <= -1 || server >= number_of_servers)
+		return;
+
+	if (!server_list[server].available_caps)
+		return;
+
+	*cap_buf = 0;
+
+	for (i = 0; server_list[server].available_caps[i]; i++)
+	{
+		const char *cap = server_list[server].available_caps[i];
+		const char *cap_name = cap;
+		char *eq = strchr(cap, '=');
+
+		if (eq)
+			cap_name = cap;
+
+		if (!my_stricmp(cap_name, "sasl"))
+		{
+			has_sasl = 1;
+		}
+
+		if (!my_stricmp(cap_name, "account-notify") ||
+		    !my_stricmp(cap_name, "away-notify") ||
+		    !my_stricmp(cap_name, "extended-join") ||
+		    !my_stricmp(cap_name, "server-time") ||
+		    !my_stricmp(cap_name, "message-tags") ||
+		    !my_stricmp(cap_name, "echo-message") ||
+		    !my_stricmp(cap_name, "cap-notify"))
+		{
+			if (ptr != cap_buf)
+				strncat(ptr, " ", BIG_BUFFER_SIZE - (ptr - cap_buf) - 1);
+			strncat(ptr, cap, BIG_BUFFER_SIZE - (ptr - cap_buf) - 1);
+			ptr = cap_buf + strlen(cap_buf);
+		}
+	}
+
+	if (has_sasl && server_list[server].sasl_nick && server_list[server].sasl_pass)
+	{
+		if (ptr != cap_buf)
+			strncat(ptr, " ", BIG_BUFFER_SIZE - (ptr - cap_buf) - 1);
+		strncat(ptr, "sasl", BIG_BUFFER_SIZE - (ptr - cap_buf) - 1);
+	}
+
+	if (*cap_buf)
+	{
+		my_send_to_server(server, "CAP REQ :%s", cap_buf);
+		server_list[server].cap_ack_pending = 1;
+	}
+}

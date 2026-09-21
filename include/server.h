@@ -168,6 +168,14 @@ typedef	struct
 	char *sasl_nick;
 	char *sasl_pass;
 
+/* IRCv3 capability negotiation */
+	int	ircv3_cap_version;
+	int	cap_negotiating;
+	int	cap_ack_pending;
+	char	**available_caps;
+	char	**enabled_caps;
+	int	echo_message_enabled;
+
 /* recv_nick: the nickname of the last person to send you a privmsg */
 	char *recv_nick;
 /* sent_nick: the nickname of the last person to whom you sent a privmsg */
@@ -401,6 +409,24 @@ NotifyItem	*get_server_notify_list		(int);
 	char *get_server_sasl_nick(int);
 //	void set_server_sasl_pass(int, const char *);
 	char *get_server_sasl_pass(int);
+
+/* IRCv3 capability negotiation */
+	void	start_cap_negotiation		(int);
+	void	end_cap_negotiation		(int);
+	void	add_available_capability	(int, const char *);
+	void	add_enabled_capability		(int, const char *);
+	void	remove_enabled_capability	(int, const char *);
+	int	has_capability			(int, const char *);
+	void	clear_capabilities		(int);
+	void	request_capabilities		(int);
+	int	get_ircv3_cap_version		(int);
+	void	set_ircv3_cap_version		(int, int);
+	int	get_cap_negotiating		(int);
+	void	set_cap_negotiating		(int, int);
+	int	get_cap_ack_pending		(int);
+	void	set_cap_ack_pending		(int, int);
+	int	get_echo_message_enabled	(int);
+	void	set_echo_message_enabled	(int, int);
 				
 #define USER_MODE	0x0001
 #define USER_MODE_A	USER_MODE << 0
