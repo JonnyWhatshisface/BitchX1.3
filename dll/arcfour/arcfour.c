@@ -185,6 +185,18 @@ static int get_dcc_encrypt (int type, int sock, char *buf, int parm, int len)
 	return len;
 }
 
+static void read_dcc_encrypt(int sock)
+{
+	char buf[BIG_BUFFER_SIZE + 1];
+	int len;
+	if ((len = dgets(buf, sock, 0, BIG_BUFFER_SIZE, NULL)) > 0) {
+		buf[len-1] = '\0';
+		dcc_crypt(sock, buf, len);
+		if (buf[len])
+			buf[len] = '\0';
+	}
+}
+
 /* Here we initialize the cryptography. Send the other end our key, and read
  * in theirs. The socket "s" won't have a crypt box unless it is supposed to
  * an encrypted connection.
@@ -250,7 +262,7 @@ SocketList *sa;
 	new_s = accept(s, (struct sockaddr *) &remaddr, &sra);
 	type = flags & DCC_TYPES;
 	n = get_socketinfo(s);
-	if ((add_socketread(new_s, ntohs(remaddr.sin_port), flags, nick, get_dcc_encrypt, NULL)) < 0)
+	if ((add_socketread(new_s, ntohs(remaddr.sin_port), flags, nick, read_dcc_encrypt, NULL)) < 0)
 	{
 		erase_dcc_info(s, 0, "%s", convert_output_format("$G %RDCC error: accept() failed. punt!!", NULL, NULL));
 		close_socketread(s);

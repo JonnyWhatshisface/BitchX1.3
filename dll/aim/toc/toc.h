@@ -273,7 +273,7 @@ extern int (*TOC_HANDLERS[30])(int, char **);
 
 /* EXTERNAL FUNCTIONS */
 
-extern int toc_add_input_stream(int,int (*)(int));
+extern int toc_add_input_stream(int, void (*)(int));
 extern int toc_remove_input_stream(int);	
 
 #endif // _TOC_H

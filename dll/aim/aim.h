@@ -42,7 +42,7 @@ extern LL msgdthem;
 
 /* toc.c */
 void bx_init_toc();
-int toc_add_input_stream(int fd,int (*func)(int));
+int toc_add_input_stream(int fd, void (*func)(int));
 int toc_remove_input_stream(int fd) ;
 int toc_main_interface(int type, char **args);
 int toc_timer(int type, char **args);

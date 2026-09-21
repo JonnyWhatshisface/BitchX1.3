@@ -33,7 +33,7 @@ void (*chatprintf)(char *, ...) = statusprintf;
 
 /* LIBToc Call back functions */
 
-int toc_add_input_stream(int fd,int (*func)(int)) {
+int toc_add_input_stream(int fd, void (*func)(int)) {
 	sock_read_id = add_socketread(fd, 0, 0, "bleh", func, func);	
         return 1;
 }

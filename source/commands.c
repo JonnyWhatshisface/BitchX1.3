@@ -944,17 +944,10 @@ IrcCommandDll * find_dll_command(char *com, int *cnt)
 	
 	if (com && (len = strlen(com)) && dll_commands)
 	{
-		int	min,
-			max;
 		IrcCommandDll *old, *old_next = NULL;
 		
-		*cnt = 0;
-		min = 1;
-		max = 0;
-		for (old = dll_commands; old; old = old->next)
-			max++;
-		
-		old = dll_commands;
+	*cnt = 0;
+	old = dll_commands;
 		while (1)
 		{
 			if (!my_strnicmp(com, old->name, len))

@@ -67,10 +67,12 @@ CVS_REVISION(server_c)
 
 static	char *	set_umode (int du_index);
 
+#ifdef HAVE_SSL
 static int is_standard_tls_port(int port)
 {
 	return (port == 6697 || port == 6696 || port == 6698 || port == 6699 || port == 7000);
 }
+#endif
 
 const	char *  umodes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 

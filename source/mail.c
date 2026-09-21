@@ -182,7 +182,7 @@ static	char ret_str[12];
 static  int	i = 0;
 #ifdef WANT_DLL
 	if (check_ext_mail)
-		return (char *)(*check_ext_mail)();
+		return ((char *(*)(void))(long)global_table[CHECK_EXT_MAIL])();
 #endif
 	switch (get_int_var(MAIL_VAR))
 	{

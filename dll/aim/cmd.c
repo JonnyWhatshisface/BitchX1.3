@@ -19,6 +19,7 @@
 #include <status.h>
 #include <vars.h>
 #include <window.h>
+#include <input.h>
 #include <sys/stat.h>
 #include <module.h>
 #include <modval.h>
@@ -377,11 +378,11 @@ void awhois(IrcCommandDll *intp, char *command, char *args, char *subargs, char 
 		return;
 	}
 
-	statusprintf("%s", cparse("ÚÄÄÄÄÄ---Ä--ÄÄ-ÄÄÄÄÄÄ---Ä--ÄÄ-ÄÄÄÄÄÄÄÄÄ--- --  -", NULL));
+	statusprintf("%s", cparse("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½---ï¿½--ï¿½ï¿½-ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½---ï¿½--ï¿½ï¿½-ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½--- --  -", NULL));
         statusprintf("%s", cparse("| User       : $0-", "%s", b->name));
-        statusprintf("%s", cparse("³ Class      : $0-", "%s", ((b->uc <= 5 && b->uc >= 0) ? USER_CLASSES[b->uc] : "Unknown")));
-        statusprintf("%s", cparse("³ Evil       : $0-", "%d", b->evil));
-	statusprintf("%s", cparse("³ SignOn     : $0-", "%s", my_ctime(b->signon)));
+        statusprintf("%s", cparse("ï¿½ Class      : $0-", "%s", ((b->uc <= 5 && b->uc >= 0) ? USER_CLASSES[b->uc] : "Unknown")));
+        statusprintf("%s", cparse("ï¿½ Evil       : $0-", "%d", b->evil));
+	statusprintf("%s", cparse("ï¿½ SignOn     : $0-", "%s", my_ctime(b->signon)));
         statusprintf("%s", cparse(": Idle       : $0-", "%d", b->idle));
 }
 
@@ -685,7 +686,7 @@ void aquery(IrcCommandDll *intp, char *command, char *args, char *subargs,char *
 		tmp->query_cmd = m_strdup("amsg");
 #undef query_nick
 		tmp->query_nick = m_strdup(n);
-		update_input(tmp);
+		update_input(UPDATE_ALL);
 #endif
 	} else {
 #undef query_cmd	

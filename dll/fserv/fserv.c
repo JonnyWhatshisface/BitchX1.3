@@ -911,7 +911,7 @@ int search_proc(char *which, char *str, char **unused)
 	return 1;
 }
 
-void impress_me(void *args)
+int impress_me(void *data, char *arg)
 {
 	int		timer;
 	char		*ch = NULL;
@@ -977,7 +977,7 @@ void impress_me(void *args)
 			}
 		}
 	}
-	add_timer(0, empty_string, timer * 1000, 1, impress_me, NULL, NULL, -1, "fserv");
+	add_timer(0, empty_string, timer * 1000, 1, (int(*)(void *, char *))impress_me, NULL, NULL, -1, "fserv");
 	new_free(&ch);
 }
 
@@ -1162,7 +1162,7 @@ char buffer[BIG_BUFFER_SIZE+1];
 
 	add_completion_type("fsload", 3, FILE_COMPLETION);
 
-	add_timer(0, empty_string, get_dllint_var("fserv_time"), 1, impress_me, NULL, NULL, -1, "fserv");
+	add_timer(0, empty_string, get_dllint_var("fserv_time"), 1, (int(*)(void *, char *))impress_me, NULL, NULL, -1, "fserv");
 	strcpy(FSstr, cparse(FS, NULL, NULL));
 	put_it("%s %s", FSstr, convert_output_format("$0 v$1 by panasync.", "%s %s", fserv_version, AUTO_VERSION));
 	sprintf(buffer, "$0+%s by panasync - $2 $3", fserv_version);

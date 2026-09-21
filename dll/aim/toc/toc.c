@@ -302,7 +302,7 @@ unsigned char *roast_password(char *pass)
 	for (x=0;(x<150) && pass[x]; x++) 
 		pos+=sprintf(&rp[pos],"%02x", pass[x] ^ roast[x % strlen(roast)]);
 	rp[pos]='\0';
-        return rp;
+        return (unsigned char *)rp;
 }
 
 char *print_header(void *hdr_v)
@@ -457,6 +457,7 @@ int toc_callback(int fd)
 		use_handler(TOC_RAW_HANDLE,TOC_GOTO_URL,raw);
 		name = strtok(NULL, ":");
 		url = strtok(NULL, ":");
+		(void)name;
 
 
 		snprintf(tmp, sizeof(tmp), "http://%s:%d/%s", toc_addy, aim_port, url);
@@ -606,10 +607,11 @@ int toc_callback(int fd)
                 while(*m && (*m != ':')) m++;
                 m++;
 
-                if (!strcasecmp(whisper, "T"))
+		if (!strcasecmp(whisper, "T"))
 			w = 1;
 		else
 			w = 0;
+		(void)w;
 
 		/* serv_got_chat_in(id, who, w, m); */
 		b = buddy_chat_getbyid(id);
