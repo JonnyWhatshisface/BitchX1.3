@@ -501,10 +501,11 @@ int SSL_dcc_create(SocketList *s, int sock, int doconnect)
 {
 	set_blocking(sock);
 	if(doconnect)
-		s->ctx = SSL_CTX_new (SSLv23_client_method());
+		s->ctx = SSL_CTX_new (BX_SSL_CLIENT_METHOD());
 	else
-		s->ctx = SSL_CTX_new (SSLv23_server_method());
-	SSL_CTX_set_cipher_list(s->ctx, "ADH:@STRENGTH");
+		s->ctx = SSL_CTX_new (BX_SSL_SERVER_METHOD());
+	BX_SSL_SET_MIN_PROTO(s->ctx, TLS1_2_VERSION);
+	SSL_CTX_set_cipher_list(s->ctx, "ECDHE+AESGCM:ECDHE+CHACHA20:DHE+AESGCM:!aNULL:!eNULL:!EXPORT:!MD5:!RC4");
 	s->ssl_fd = SSL_new (s->ctx);
 	SSL_set_fd (s->ssl_fd, sock);
 	if(doconnect)

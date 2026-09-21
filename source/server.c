@@ -67,6 +67,11 @@ CVS_REVISION(server_c)
 
 static	char *	set_umode (int du_index);
 
+static int is_standard_tls_port(int port)
+{
+	return (port == 6697 || port == 6696 || port == 6698 || port == 6699 || port == 7000);
+}
+
 const	char *  umodes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 /* server_list: the list of servers that the user can connect to,etc */
@@ -1370,11 +1375,15 @@ int finalize_server_connect(int refnum, int c_server, int my_from_server)
 
 		if(!server_list[refnum].ctx)
 		{
-			server_list[refnum].ctx = SSL_CTX_new (SSLv23_client_method());
+			server_list[refnum].ctx = SSL_CTX_new (BX_SSL_CLIENT_METHOD());
 			CHK_NULL(server_list[refnum].ctx);
+			BX_SSL_SET_MIN_PROTO(server_list[refnum].ctx, TLS1_2_VERSION);
+			SSL_CTX_set_default_verify_paths(server_list[refnum].ctx);
+			SSL_CTX_set_verify(server_list[refnum].ctx, SSL_VERIFY_PEER, NULL);
 			server_list[refnum].ssl_fd = SSL_new (server_list[refnum].ctx);
 			CHK_NULL(server_list[refnum].ssl_fd);
 			SSL_set_fd (server_list[refnum].ssl_fd, server_list[refnum].read);
+			SSL_set_tlsext_host_name(server_list[refnum].ssl_fd, get_server_name(refnum));
 		}
 		err = SSL_connect (server_list[refnum].ssl_fd);
 		if(err == -1)
@@ -1445,6 +1454,11 @@ int 	BX_connect_to_server_by_refnum (int refnum, int c_server)
 	{
 		if (sport == -1)
 			sport = irc_port;
+
+#ifdef HAVE_SSL
+		if (!get_server_ssl(refnum) && is_standard_tls_port(sport))
+			set_server_ssl(refnum, 1);
+#endif
 
 		from_server = refnum;
 		say("Connecting to port %d of server %s [refnum %d]", sport, sname, refnum);
