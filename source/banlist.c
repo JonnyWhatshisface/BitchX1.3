@@ -395,7 +395,7 @@ int old_server = from_server;
 
 void userhost_ban(UserhostItem *stuff, char *nick1, char *args)
 {
-	char *temp;
+	char *temp __attribute__((unused));
 	char *str= NULL;
 	char *channel;
 	ChannelList *c = NULL;
@@ -471,7 +471,7 @@ BUILT_IN_COMMAND(multkick)
 	char *to = NULL, *temp = NULL, *reason = NULL;
 	ChannelList *chan;
 	int server = from_server;
-	int	filter = 0;
+	int	filter __attribute__((unused)) = 0;
 	
 
 	if (command && *command)
@@ -584,7 +584,7 @@ BUILT_IN_COMMAND(doop)
 	char *to = NULL, 
 		*temp = NULL;
 	ChannelList	*chan = NULL;
-	int	count,
+	int	count __attribute__((unused)),
 		max = get_int_var(NUM_OPMODES_VAR);
 	int	old_server = from_server;
 
@@ -621,7 +621,7 @@ BUILT_IN_COMMAND(doop)
 BUILT_IN_COMMAND(dodeop)
 {
 	char *to = NULL, *temp;
-	int count, max;
+	int count __attribute__((unused)), max;
 	ChannelList *chan;
 	int server = from_server;
 		
@@ -669,8 +669,8 @@ BUILT_IN_COMMAND(massop)
 	
 	int	maxmodes = get_int_var(NUM_OPMODES_VAR), 
 		count, 
-		i, 
-		all = 0,
+		i __attribute__((unused)), 
+		all __attribute__((unused)) = 0,
 		massvoice =0;
 	int	server = 0;
 		

@@ -243,7 +243,7 @@ extern void	BX_update_input (int update)
 				term_echo(last_input_screen->promptlist->echo);
 
 			ptr_free = ptr;
-			ptr = (char *)strip_ansi(ptr);
+			ptr = (char *)strip_ansi((const unsigned char *)ptr);
 			strcat(ptr, ALL_OFF_STR);	/* Yes, we can do this */
 			if (free_it)
 				new_free(&ptr_free);
@@ -259,7 +259,7 @@ extern void	BX_update_input (int update)
 	
 				INPUT_PROMPT = ptr;
 				len = strlen(INPUT_PROMPT);
-				INPUT_PROMPT_LEN = output_with_count(INPUT_PROMPT, 0, 0);
+				INPUT_PROMPT_LEN = output_with_count((const unsigned char *)INPUT_PROMPT, 0, 0);
 				update = UPDATE_ALL;
 			}
 			else
@@ -389,7 +389,7 @@ extern void	BX_update_input (int update)
 				/*
 				 * Output the prompt.
 				 */
-				output_with_count(INPUT_PROMPT, 0, 1);
+				output_with_count((const unsigned char *)INPUT_PROMPT, 0, 1);
 
 				/*
 				 * Turn the echo back to what it was before,
@@ -706,7 +706,7 @@ BUILT_IN_KEYBINDING(input_end_of_line)
 BUILT_IN_KEYBINDING(input_delete_to_previous_space)
 {
 	int	old_pos;
-	char	c;
+	char	c __attribute__((unused));
 
 	cursor_to_input();
 	old_pos = THIS_POS;
@@ -1154,7 +1154,7 @@ NickList *nick, *ntmp = NULL, *bestmatch = NULL;
 			bestmatch = ntmp = nick;
 		else if (!my_strnicmp(possible, nick->nick, strlen(possible)))
 			ntmp = nick;
-		else if (!ntmp && my_strnstr(nick->nick, possible, strlen(possible)))
+		else if (!ntmp && my_strnstr((const unsigned char *)nick->nick, (const unsigned char *)possible, strlen(possible)))
 			ntmp = nick;
 	}
 	return bestmatch ? bestmatch : ntmp;
@@ -1360,7 +1360,7 @@ void	edit_char (u_char key)
 		key_[0] = key;
 		oldprompt = last_input_screen->promptlist;
 		last_input_screen->promptlist = oldprompt->next;
-		(*oldprompt->func)(oldprompt->data, key_);
+		(*oldprompt->func)(oldprompt->data, (char *)key_);
 		new_free(&oldprompt->data);
 		new_free(&oldprompt->prompt);
 		new_free((char **)&oldprompt);
@@ -1836,7 +1836,7 @@ NickList *cnick;
 				for (; cnick; cnick = next_nicklist(chan, cnick))
 				{
 #if 1
-					if (!my_strnicmp(cnick->nick, nick, strlen(nick)) || my_strnstr(cnick->nick, nick, strlen(nick)))
+					if (!my_strnicmp(cnick->nick, nick, strlen(nick)) || my_strnstr((const unsigned char *)cnick->nick, (const unsigned char *)nick, strlen(nick)))
 #else
 					if (!my_strnicmp(cnick->nick, nick, strlen(nick)))
 #endif
@@ -1852,7 +1852,7 @@ NickList *cnick;
 				{
 					for (; cnick; cnick = next_nicklist(chan, cnick))
 					{
-						if (my_strnstr(cnick->nick, nick, strlen(nick)))
+						if (my_strnstr((const unsigned char *)cnick->nick, (const unsigned char *)nick, strlen(nick)))
 						{
 							tnick = cnick->nick;
 							break;
@@ -2206,7 +2206,7 @@ char *booya = NULL;
 char *path = NULL;
 char *path2, *freeme;
 glob_t globbers;
-int numglobs = 0, i;
+int numglobs __attribute__((unused)) = 0, i;
 int globtype = GLOB_MARK;
 
 #if defined(__EMX__) || defined(WINNT)
@@ -2590,7 +2590,7 @@ Ext_Name_Type *extcomp = ext_completion;
 			old_p = p = extract(inp, 0, 0);
 			if (wcount > 1)
 				old_pos = possible = extract(inp, wcount-1, EOS);
-			if ((*p == *cmdchar))
+			if (*p == *cmdchar)
 				p++;
 			if (possible && (*possible == '"'))
 			{
@@ -2711,7 +2711,7 @@ do_more_tab:
 				{
 					old = inp;
 					old = last_arg(&inp);
-					if ((*old == '"'))
+					if (*old == '"')
 					{
 						old++;
 						chop(old, 1);

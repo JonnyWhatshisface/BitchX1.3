@@ -1,6 +1,16 @@
 /* 
  *  Copyright Colten Edwards (c) 1996
  */
+/*
+ * This translation unit intentionally contains CP437-encoded glyphs
+ * (ASCII-art logos, box-drawing and UI accents) which are converted to
+ * UTF-8 at display time. The source encoding is deliberately not UTF-8,
+ * so suppress clang's -Winvalid-source-encoding for this file.
+ */
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Winvalid-source-encoding"
+#endif
+
 #include "irc.h"
 static char cvsrevision[] = "$Id: misc.c 198 2012-05-28 13:52:18Z keaston $";
 CVS_REVISION(misc_c)
@@ -165,19 +175,19 @@ BUILT_IN_COMMAND(do_uptime)
 	put_it("%s",convert_output_format("%G| %cTotal Users on Shitlist: %K[%R$0%K]","%d",shit_count));
 
 #else
-	put_it("%s",convert_output_format("%GÚÄ[ %WBitchX%gÄ%wClient%gÄ%RStatistics %G]ÄÄÄÄ---%gÄ--ÄÄ%K-%gÄÄÄÄÄ--%GÄ--ÄÄ%K-%gÄÄÄÄÄÄÄ--- %K--%g  -",NULL));
+	put_it("%s",convert_output_format("%Gï¿½ï¿½[ %WBitchX%gï¿½%wClient%gï¿½%RStatistics %G]ï¿½ï¿½ï¿½ï¿½---%gï¿½--ï¿½ï¿½%K-%gï¿½ï¿½ï¿½ï¿½ï¿½--%Gï¿½--ï¿½ï¿½%K-%gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½--- %K--%g  -",NULL));
 	put_it("%s",convert_output_format("%G| %CClient Version: %W$0 $1","%s %s", irc_version, internal_version));
-	put_it("%s",convert_output_format("%G³ %CClient Running Since %W$0-","%s",my_ctime(start_time)));
+	put_it("%s",convert_output_format("%Gï¿½ %CClient Running Since %W$0-","%s",my_ctime(start_time)));
 	put_it("%s",convert_output_format("%G| %CClient Uptime: %W$0-","%s",convert_time(now-start_time)));
-	put_it("%s",convert_output_format("%G³ %CCurrent UserName: %W$0-","%s", username));
+	put_it("%s",convert_output_format("%Gï¿½ %CCurrent UserName: %W$0-","%s", username));
 	put_it("%s",convert_output_format("%G: %CCurrent RealName: %W$0-","%s", realname));
 	put_it("%s",convert_output_format("%G. %CLast Recv Message: %W$0-","%s",last_msg[0].last_msg?last_msg[0].last_msg:"None"));
 	put_it("%s",convert_output_format("%G: %CLast Recv Notice: %W$0-","%s",last_notice[0].last_msg?last_notice[0].last_msg:"None"));
 	put_it("%s",convert_output_format("%G. %CLast Sent Msg: %W$0-","%s",last_sent_msg[0].last_msg?last_sent_msg[0].last_msg:"None"));
 	put_it("%s",convert_output_format("%G: %CLast Sent Notice: %W$0-","%s",last_sent_notice[0].last_msg?last_sent_notice[0].last_msg:"None"));
-	put_it("%s",convert_output_format("%G³ %CLast Channel invited to: %R$0-","%s",invite_channel?invite_channel:"None"));
+	put_it("%s",convert_output_format("%Gï¿½ %CLast Channel invited to: %R$0-","%s",invite_channel?invite_channel:"None"));
 	put_it("%s",convert_output_format("%G| %cTotal Users on Userlist: %K[%R$0%K]","%d",user_count));
-	put_it("%s",convert_output_format("%G³ %cTotal Users on Shitlist: %K[%R$0%K]","%d",shit_count));
+	put_it("%s",convert_output_format("%Gï¿½ %cTotal Users on Shitlist: %K[%R$0%K]","%d",shit_count));
 
 #endif
 }
@@ -1082,7 +1092,7 @@ char *stripansi(unsigned char *line)
 {
 register unsigned char    *cp;
 unsigned char *newline;
-	newline = m_strdup(line);        
+	newline = (unsigned char *)m_strdup((const char *)line);        
 	for (cp = newline; *cp; cp++)
 		if ((*cp < 31 && *cp > 13))
 			if (*cp != 1 && *cp != 15 && *cp !=22 && *cp != 0x9b)
@@ -1769,12 +1779,12 @@ int freadln(FILE *stream, char *lin)
 
 char *randreason(char *filename)
 {
-	int count, min, i;
+	int count, i;
 	FILE *bleah;
 	char *f = NULL;
 	static char buffer[IRCD_BUFFER_SIZE/4 + 1];
 
-	min = 1;
+
 	count = 0;
 
 	buffer[0] = '\0';
@@ -2485,7 +2495,7 @@ static	int	ar_query_name(char *name, int class, int type, struct reslist *rptr)
 
 	memset(buf, 0, sizeof(buf));
 	r = res_mkquery(QUERY, name, class, type, NULL, 0, NULL,
-			buf, sizeof(buf));
+			(u_char *)buf, sizeof(buf));
 	if (r <= 0)
 	    {
 		h_errno = NO_RECOVERY;
@@ -2662,7 +2672,7 @@ static	int	ar_procanswer(struct reslist *rptr, HEADER *hptr, char *buf, char *eo
 	char	*cp, **alias;
 	int	class, type, dlen, len, ans = 0, n;
 	unsigned int ttl, dr, *adr;
-	struct	hent	*hp;
+	struct	hent	*hp __attribute__((unused));
 
 	cp = buf + HFIXEDSZ;
 	adr = (unsigned int *)rptr->re_he.h_addr_list;
@@ -2686,13 +2696,13 @@ static	int	ar_procanswer(struct reslist *rptr, HEADER *hptr, char *buf, char *eo
 	 * in the future. - Brian
 	 */
 	while (hptr->qdcount-- > 0)
-		cp += dn_skipname(cp, eob) + QFIXEDSZ;
+		cp += dn_skipname((const u_char *)cp, (const u_char *)eob) + QFIXEDSZ;
 #endif
 	/*
 	 * proccess each answer sent to us. blech.
 	 */
 	while (hptr->ancount-- > 0 && cp < eob) {
-		n = dn_expand(buf, eob, cp, ar_hostbuf, sizeof(ar_hostbuf)-1);
+		n = dn_expand((const u_char *)buf, (const u_char *)eob, (const u_char *)cp, ar_hostbuf, sizeof(ar_hostbuf)-1);
 		cp += n;
 		if (n <= 0)
 			return ans;
@@ -2727,7 +2737,7 @@ static	int	ar_procanswer(struct reslist *rptr, HEADER *hptr, char *buf, char *eo
 				malloc_strcpy(&rptr->re_he.h_name, ar_hostbuf);
 			break;
 		case T_PTR :
-			if ((n = dn_expand(buf, eob, cp, ar_hostbuf,
+			if ((n = dn_expand((const u_char *)buf, (const u_char *)eob, (const u_char *)cp, ar_hostbuf,
 					   sizeof(ar_hostbuf)-1 )) < 0)
 			    {
 				cp += n;
@@ -3114,7 +3124,7 @@ BUILT_IN_COMMAND(nslookup)
 {
 #ifdef WANT_NSLOOKUP
 	char	*host, 
-		*hostname, 
+		*hostname __attribute__((unused)), 
 		*cmd = NULL;
 	int count = 0;
 	while ((host = next_arg(args, &args)))
@@ -3599,9 +3609,9 @@ int BX_write_sockets(int s, unsigned char *str, int len, int nl)
 	if (nl)
 	{
 		unsigned char *buf;
-		buf = alloca(strlen(str)+4);
-		strcpy(buf, str);
-		strcat(buf, "\r\n");
+		buf = (unsigned char *)alloca(strlen((const char *)str)+4);
+		strcpy((char *)buf, (const char *)str);
+		strcat((char *)buf, (const char *)"\r\n");
 		len += 2;
 		return write(s, buf, len);
 	}
@@ -3668,7 +3678,7 @@ extern int dgets_errno;
 void read_netfinger(int s)
 {
 char tmpstr[BIG_BUFFER_SIZE+1];
-register unsigned char *p = tmpstr;
+register unsigned char *p = (unsigned char *)tmpstr;
 	*tmpstr = 0;
 	switch(dgets(tmpstr, s, 0, BIG_BUFFER_SIZE, NULL))
 	{
@@ -3743,7 +3753,7 @@ void netfinger (char *name)
 		}
 		if ((add_socketread(s, port, 0, name, read_netfinger, NULL)) > -1)
 		{
-			write_sockets(s, name, strlen(name), 1);
+			write_sockets(s, (u_char *)name, strlen(name), 1);
 			add_sockettimeout(s, 120, NULL);
 		} else
 			close_socketread(s);
@@ -3792,26 +3802,30 @@ char buf[128], *hostname = buf;
         int             address_len;
 
 	address_len = sizeof(struct sockaddr_foobar);
-        if ((getpeername(rc, (struct sockaddr *) &addr, &address_len)) != -1)
 	{
-		serv = getservbyport(addr.sf_port,"tcp");
-		strcpy(hostname, "unknown");
-		if (addr.sf_family == AF_INET)
+		socklen_t addr_len_t = address_len;
+		if ((getpeername(rc, (struct sockaddr *) &addr, &addr_len_t)) != -1)
 		{
-			address_len = sizeof(struct in_addr);
-			if ((host = gethostbyaddr((char *)&addr.sf_addr, address_len, AF_INET)))
-				hostname = (char *)host->h_name;
-			else
-				hostname = inet_ntoa(addr.sf_addr);
-		}
+			address_len = addr_len_t;
+			serv = getservbyport(addr.sf_port,"tcp");
+			strcpy(hostname, "unknown");
+			if (addr.sf_family == AF_INET)
+			{
+				address_len = sizeof(struct in_addr);
+				if ((host = gethostbyaddr((char *)&addr.sf_addr, address_len, AF_INET)))
+					hostname = (char *)host->h_name;
+				else
+					hostname = inet_ntoa(addr.sf_addr);
+			}
 #ifdef IPV6
-		else
-		{
-			if (getnameinfo((struct sockaddr*) &addr, sizeof(struct sockaddr_foobar), hostname, 128, NULL, 0, 0))
-				hostname = (char *)inet_ntop(AF_INET6, (void*) &(addr.sf_addr6), buf, 128);
-		}
+			else
+			{
+				if (getnameinfo((struct sockaddr*) &addr, sizeof(struct sockaddr_foobar), hostname, 128, NULL, 0, 0))
+					hostname = (char *)inet_ntop(AF_INET6, (void*) &(addr.sf_addr6), buf, 128);
+			}
 #endif
-		put_it("Hostname %s port %d is running (%s)", hostname, htons(addr.sf_port), serv == NULL? "UNKNOWN":serv->s_name);
+			put_it("Hostname %s port %d is running (%s)", hostname, htons(addr.sf_port), serv == NULL? "UNKNOWN":serv->s_name);
+		}
 	}
 	close_socketread(rc);
 }
@@ -4412,11 +4426,11 @@ int caps_fucknut (register unsigned char *crap)
 
 int char_fucknut (register unsigned char *crap, char looking, int max)
 {
-	int total = strlen(crap), allchar = 0;
+	int total = strlen((const char *)crap), allchar = 0;
 
 	while (*crap)
 	{
-		if ((*crap == looking))
+		if (*crap == looking)
 		{
 			crap++;
 			while(*crap && *crap != looking)
@@ -4778,8 +4792,8 @@ int arg_flags;
 		return m_strdup(empty_string);
 
 	memset(buffer, 0, BIG_BUFFER_SIZE);
-        strlcpy(buffer2, str, RAW_BUFFER_SIZE);
-	copy = tmpc = buffer2;
+        strlcpy((char *)buffer2, str, RAW_BUFFER_SIZE);
+	copy = tmpc = (char *)buffer2;
         s = buffer;
 	while (*tmpc)
 	{
@@ -4792,7 +4806,7 @@ int arg_flags;
 			in_cparse--;
 			if (new_str)
 #ifdef RECURSE_CPARSE
-				strlcat(s, convert_output_format(new_str, NULL, NULL), RAW_BUFFER_SIZE);
+				strlcat((char *)s, convert_output_format(new_str, NULL, NULL), RAW_BUFFER_SIZE);
 #else
 				strlcat(s, new_str, RAW_BUFFER_SIZE);
 #endif
@@ -4805,7 +4819,7 @@ int arg_flags;
 		tmpc++; s++;
 	}
 	*s = 0;
-	return m_strdup(buffer);
+	return (char *)m_strdup((const char *)buffer);
 }
 
 void add_last_type (LastMsg *array, int size, char *from, char *uh, char *to, char *str)

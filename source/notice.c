@@ -621,7 +621,7 @@ const	char	*f;
 #endif
 			if (do_hook(SERVER_NOTICE_LIST, flag ? "%s *** %s" : "%s %s", f, line))
 			{
-				char *for_;
+				char *for_ __attribute__((unused));
 				for_ = next_arg(line,&line);
 				serversay(1, from_server, "%s", 
 				convert_output_format(fget_string_var(FORMAT_SERVER_NOTICE_FSET), "%s %s %s", update_clock(GET_TIME), 
@@ -745,7 +745,7 @@ void parse_notice(char *from, char **Args)
 	{
 		char *free_me = NULL;
 		char *s;
-		free_me = newline = stripansi(line);
+		free_me = newline = (char *)(uintptr_t)stripansi((unsigned char *)line);
 		if (wild_match("[*Wall*", line))
 		{
 			char *channel = NULL, *p, *q;
@@ -823,6 +823,9 @@ void load_scripts(void)
 	{
 		never_connected = 0;
 #if !defined(WINNT) && !defined(__EMX__)
+#ifndef SCRIPT_PATH
+#define SCRIPT_PATH "/usr/local/lib/bx/script"
+#endif
 		window_display = 0;
 		sprintf(buffer, "%s/bxglobal", SCRIPT_PATH);
 		loading_global = 1;
@@ -876,7 +879,7 @@ char *h;
 
 void got_initial_version_28 (char **ArgList)
 {
-	char *server, *sversion, *user_modes, *channel_modes;
+	char *server, *sversion, *user_modes __attribute__((unused)), *channel_modes;
 
 	server = ArgList[0];
 	sversion = ArgList[1];

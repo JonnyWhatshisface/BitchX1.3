@@ -624,7 +624,7 @@ NickList	*tnl = NULL;
 					tucm->v_ed = 1;
 					tucm->dev_ed = 0;
 				} 
-				else if (!add & isvoiced) 
+				else if ((!add) & isvoiced) 
 				{
 					tucm->v_ed = 0;
 					tucm->dev_ed = 1;
@@ -1359,7 +1359,7 @@ void BX_rename_nick(char *old_nick, char *new_nick, int server)
 	
 	for (chan = get_server_channels(server); chan; chan = chan->next)
 	{
-		if ((chan->server == server))
+		if (chan->server == server)
 		{
 			if ((tmp = find_nicklist_in_channellist(old_nick, chan, REMOVE_FROM_LIST)))
 			{
@@ -1492,7 +1492,7 @@ void list_channels(void)
 {
 	ChannelList *tmp;
 	int	server,
-		no = 1;
+		no __attribute__((unused)) = 1;
 	
 	if (get_server_channels(from_server))
 	{

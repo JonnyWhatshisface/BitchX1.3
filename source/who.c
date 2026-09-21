@@ -399,7 +399,7 @@ void whoreply (char *from, char **ArgList)
 		*nick,
 		*stat,
 		*name;
-	ChannelList *chan = NULL;
+	ChannelList *chan __attribute__((unused)) = NULL;
 	char buf_data[BIG_BUFFER_SIZE+1];
 	WhoEntry *new_w = who_queue_top(from_server);
 

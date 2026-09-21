@@ -412,7 +412,7 @@ void	save_digraphs(FILE *fp)
 		char	*command = "\nDIGRAPH -ADD ";
 
 		fprintf(fp, "DIGRAPH -CLEAR");
-		fprintf(fp, command);
+		fprintf(fp, "%s", command);
 		while(1)
 		{
 			fprintf(fp, "%d %d %d  ", dig_table_lo[i],
@@ -420,7 +420,7 @@ void	save_digraphs(FILE *fp)
 			if (!dig_table_lo[++i])
 				break;
 			if (!(i % 5))
-				fprintf(fp, command);
+				fprintf(fp, "%s", command);
 		}
 		fputc('\n', fp);
 

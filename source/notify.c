@@ -49,7 +49,7 @@ void notify_userhost_reply (char *, char *);
 
 void	rebuild_notify_ison (int server)
 {
-	char *stuff;
+	char *stuff __attribute__((unused));
 	int i;
 	if (from_server == -1)
 		return;

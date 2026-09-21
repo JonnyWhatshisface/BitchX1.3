@@ -6,6 +6,8 @@
 #ifndef _misc_h
 #define _misc_h
 
+struct reslist;
+
 #define KICKLIST		0x01
 #define LEAVELIST		0x02
 #define JOINLIST		0x03
@@ -127,10 +129,10 @@ ChannelList *	BX_prepare_command (int *, char *, int);
 	BanList		*eban_is_on_channel(register char *, register ChannelList *);
 	void		check_orig_nick(char *);
 
-	char		*do_nslookup (char *, char *, char *, char *, int, void (*func)(), char *);
+	char		*do_nslookup (char *, char *, char *, char *, int, void (*func)(struct reslist *), char *);
 	void		set_nslookupfd(fd_set *);
 	long		print_nslookup(fd_set *);
-	void		auto_nslookup();
+	void		auto_nslookup(struct reslist *);
 	int		freadln(FILE *, char *);
 
 
@@ -210,14 +212,14 @@ struct	reslist {
 	char	*channel;
 	char	*command;
 	int	server;
-	void	(*func)();
+	void (*func)(struct reslist *);
 };
 
 struct	hostent	*ar_answer(char *, int, void (*func)(struct reslist *) );
 void    ar_close(void);
 int     ar_delete(char *, int);
-int     ar_gethostbyname(char *, char *, int, char *, char *, char *, char *, int, void (*func)(), char *);
-int     ar_gethostbyaddr(char *, char *, int, char *, char *, char *, char *, int, void (*func)(), char *);
+int     ar_gethostbyname(char *, char *, int, char *, char *, char *, char *, int, void (*func)(struct reslist *), char *);
+int     ar_gethostbyaddr(char *, char *, int, char *, char *, char *, char *, int, void (*func)(struct reslist *), char *);
 int     ar_init(int);
 int     ar_open(void);
 long    ar_timeout(time_t, char *, int, void (*func)(struct reslist *) );

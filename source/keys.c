@@ -35,8 +35,8 @@ typedef unsigned char uc;
 static 	void 	new_key 	(int, unsigned, int, int, char *);
 static 	void	snew_key 	(int meta, unsigned chr, char *what);
 static	uc *	display_key 	(uc c);
-static	int 	lookup_function (const uc *name, int *lf_index);
-static int	parse_key (const uc *sequence, uc *term);
+static	int 	lookup_function (const char *name, int *lf_index);
+static int	parse_key (const char *sequence, uc *term);
 
 #ifdef GUI
 char *mouse_actions[] =
@@ -434,7 +434,7 @@ static void	snew_key (int meta, unsigned chr, char *what)
 #endif
 }
 
-static	void	snew_key_from_str (uc *string, char *what)
+static	void	snew_key_from_str (char *string, char *what)
 {
 	int	i;
 	int	meta;
@@ -750,16 +750,16 @@ static int	grok_meta (const uc *ptr, const uc **end)
 	 * Well, if it is going to be anywhere, META has to be out front,
 	 * so lets slurp it up if its there.
 	 */
-	if (!my_strnicmp(ptr, "META", 4))
+	if (!my_strnicmp((const char *)ptr, "META", 4))
 	{
 		str = ptr = ptr + 4;
 		while (isdigit(*ptr))
 			ptr++;
-		if (*ptr == '_' && !my_strnicmp(ptr, "_CHARACTER", 10))
+		if (*ptr == '_' && !my_strnicmp((const char *)ptr, "_CHARACTER", 10))
 			ptr = ptr + 10;
 		if (*ptr == '-')
 			ptr++;
-		meta = atol(str);
+		meta = atol((const char *)str);
 	}
 
 	*end = ptr;
@@ -772,9 +772,9 @@ static int	grok_meta (const uc *ptr, const uc **end)
  * work with, including the redux of ^X into X-64.
  * You can then work with the sequence after processing.
  */
-void	copy_redux (const uc *orig, uc *result)
+void	copy_redux (const char *orig, uc *result)
 {
-	const  uc	*ptr;
+	const  char	*ptr;
 	*result = 0;
 	
 	for (ptr = orig; ptr && *ptr; ptr++, result++)
@@ -870,7 +870,7 @@ int	find_meta_map	(uc key)
  *	/BIND ^[[11~	BIND-ACTION	(Force us to make suer ^[[11 is bound
  *					 to a meta map before returning.)
  */
-static int	parse_key (const uc *sequence, uc *term)
+static int	parse_key (const char *sequence, uc *term)
 {
 	uc	*copy;
 	uc	*end;
@@ -890,7 +890,7 @@ static int	parse_key (const uc *sequence, uc *term)
 	 */
 	copy = alloca(strlen(sequence) + 4);
 	copy_redux(sequence, copy);
-	end = copy + strlen(copy) - 1;
+	end = copy + strlen((const char *)copy) - 1;
 
 #ifdef GUI
 	for( mouse = 0; mouse < MAX_MOUSE; mouse++)
@@ -967,7 +967,7 @@ static int	parse_key (const uc *sequence, uc *term)
 	if (x_debug & DEBUG_AUTOKEY)
 	{
 		yell("Starting to work on the string:");
-		yell("SOME_CHARACTERS := [%s] (%d)", copy, strlen(copy));
+		yell("SOME_CHARACTERS := [%s] (%d)", copy, strlen((const char *)copy));
 		yell("TERMINAL_CHARACTER := [%c]", terminal_character);
 		yell("LAST_CHARACTER := [%c]", last_character);
 	}
@@ -1000,7 +1000,7 @@ static int	parse_key (const uc *sequence, uc *term)
 	{
 		if (x_debug & DEBUG_AUTOKEY)
 		{
-			yell("COPY: [%s] (%d)", copy, strlen(copy));
+			yell("COPY: [%s] (%d)", copy, strlen((const char *)copy));
 			yell("Now we are going to bind the [%c] character to meta [%d] somehow.",
 					terminal_character, last);
 		}
@@ -1070,9 +1070,9 @@ static int	parse_key (const uc *sequence, uc *term)
  */
 BUILT_IN_COMMAND(bindcmd)
 {
-	uc	*key,
+	char	*key,
 		*function;
-	uc	*newkey;
+	char	*newkey;
 	int	meta;
 	uc	dakey;
 	int	bi_index;
@@ -1179,12 +1179,12 @@ BUILT_IN_COMMAND(bindcmd)
  * set to the first item that matches the 'name'.  For all other return
  * values, "lf_index" will have the value -1.
  */
-static int 	lookup_function (const uc *orig_name, int *lf_index)
+static int 	lookup_function (const char *orig_name, int *lf_index)
 {
 	int	len,
 		cnt,
 		i;
-	uc	*name, *breakage;
+	char	*name;
 
 	if (!orig_name)
 	{
@@ -1192,7 +1192,7 @@ static int 	lookup_function (const uc *orig_name, int *lf_index)
 		return 1;
 	}
 
-	breakage = name = LOCAL_COPY(orig_name);
+	name = LOCAL_COPY(orig_name);
 	upper(name);
 	len = strlen(name);
 
@@ -1204,7 +1204,7 @@ static int 	lookup_function (const uc *orig_name, int *lf_index)
 		const uc *	endp;
 		int		meta;
 
-		if ((meta = grok_meta(name, &endp)) < 0)
+		if ((meta = grok_meta((const uc *)name, &endp)) < 0)
 			return meta;
 		else
 		{

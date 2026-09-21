@@ -773,7 +773,6 @@ __inline static	void	pop2s_a (expr_info *c, char **s, char **t, TOKEN *v)
 	*v = t1;
 }
 
-#if notused
 __inline static void	pop2b_a (expr_info *c, BooL *a, BooL *b, TOKEN *v)
 {
 	TOKEN	t1, t2;
@@ -788,7 +787,6 @@ __inline static void	pop2b_a (expr_info *c, BooL *a, BooL *b, TOKEN *v)
 	new_free(&x);
 	new_free(&y);
 }
-#endif
 
 __inline static	void	pop3 (expr_info *c, NUMBER *a, TOKEN *v, TOKEN *w)
 {
@@ -1040,9 +1038,9 @@ void	op (expr_info *cx, int what)
 		case OREQ:	IMPLIED(a | b)
 		case SHLEFTEQ:	IMPLIED(a << b)
 		case SHRIGHTEQ: IMPLIED(a >> b)
-		case DANDEQ:	IMPLIED((long)(c && d))
-		case DOREQ:	IMPLIED((long)(c || d))
-		case DXOREQ:	IMPLIED((long)((c && !d) || (!c && d)))
+		case DANDEQ:	{ pop2b_a(cx, &c, &d, &v); pushn(cx, setnvar(cx, v, (long)(c && d))); break; }
+		case DOREQ:	{ pop2b_a(cx, &c, &d, &v); pushn(cx, setnvar(cx, v, (long)(c || d))); break; }
+		case DXOREQ:	{ pop2b_a(cx, &c, &d, &v); pushn(cx, setnvar(cx, v, (long)((c && !d) || (!c && d)))); break; }
 		case STRCATEQ:
 			pop2s_a(cx, &s, &t, &v);
 			if (x_debug & DEBUG_NEW_MATH_DEBUG) 

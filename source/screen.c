@@ -28,6 +28,10 @@ CVS_REVISION(screen_c)
 #include "ircterm.h"
 #include "names.h"
 #include "ircaux.h"
+
+#ifndef WSERV_PATH
+#define WSERV_PATH "/usr/bin/xterm"
+#endif
 #include "input.h"
 #include "log.h"
 #include "hook.h"
@@ -96,7 +100,7 @@ const	u_char	*BX_skip_ctl_c_seq		(const u_char *start, int *lhs, int *rhs, int p
 unsigned char *BX_skip_incoming_mirc(unsigned char *text)
 {
 	int i, x;
-	for (i=0;i<strlen(text);i++) {
+	for (i=0;i<strlen((const char *)text);i++) {
 		if ((int)text[i] != 3) continue;
 		else {
 			x = 0;
@@ -120,7 +124,7 @@ unsigned char *BX_skip_incoming_mirc(unsigned char *text)
 void delchar(unsigned char **text, int cnum)
 {
 	int i;
-	for (i=0;i<strlen(*text)-1;i++)
+	for (i=0;i<strlen((const char *)*text)-1;i++)
 		if (i >= cnum) text[0][i] = text[0][i+1];
 
 	text[0][i] = 0;
@@ -140,7 +144,7 @@ char *out = NULL;
 		buffer = skip_incoming_mirc(buffer);
 
 	
-	out = buffer;		
+	out = (char *)buffer;		
 
 	if (in_window_command)
 	{
@@ -179,13 +183,13 @@ char *out = NULL;
 
 	if (target_window)
 	{
-		target_window->output_func(target_window, out);
+		target_window->output_func(target_window, (const u_char *)out);
 #ifdef GUI
 		gui_activity(COLOR_ACTIVE);
 #endif
 	}
 	else
-		current_window->output_func(current_window, out);
+		current_window->output_func(current_window, (const u_char *)out);
 
 }
 
@@ -206,14 +210,14 @@ void BX_add_to_window(Window *window, const unsigned char *str)
 	if (window->server >= 0 && get_server_redirect(window->server))
 		redirect_text(window->server, 
 			        get_server_redirect(window->server),
-				str, NULL, 0, 0);
+				(const char *)str, NULL, 0, 0);
 	if (do_hook(WINDOW_LIST, "%u %s", window->refnum, str))
 	{
 		unsigned char   **lines;
 		int	cols;
 		                                                
-		add_to_log(window->log_fp, 0, str, window->mangler);
-		add_to_lastlog(window, str);
+		add_to_log(window->log_fp, 0, (const char *)str, window->mangler);
+		add_to_lastlog(window, (const char *)str);
 		display_standout(OFF);
 		display_bold(OFF);
 
@@ -242,7 +246,7 @@ void BX_add_to_window(Window *window, const unsigned char *str)
 			 * This is for archon -- he wanted a way to have 
 			 * a hidden window always beep, even if BEEP is off.
 			 */
-			if (window->beep_always && strchr(str, '\007'))
+			if (window->beep_always && strchr((const char *)str, '\007'))
 			{
 				Window *old_target_window = target_window;
 				target_window = current_window;
@@ -363,7 +367,6 @@ unsigned char **BX_prepare_display(const unsigned char *orig_str,
                                 int *lused,
                                 int flags)
 {
-	int	gchar_mode;
 static 	int 	recursion = 0, 
 		output_size = 0;
 	int 	pos = 0,            /* Current position in "buffer" */
@@ -386,7 +389,7 @@ static	u_char 	**output = NULL;
 const 	u_char	*ptr = NULL;
 	u_char 	buffer[BIG_BUFFER_SIZE + 1],
 		*cont_ptr = NULL,
-		*cont = empty_string,
+		*cont = (u_char *)empty_string,
 		c,
 		*words = NULL,
 		*str = NULL;
@@ -395,23 +398,23 @@ const 	u_char	*ptr = NULL;
 		ircpanic("prepare_display() called recursively");
 	recursion++;
 
-	gchar_mode = get_int_var(DISPLAY_PC_CHARACTERS_VAR);
+
 	beep_max = get_int_var(BEEP_VAR)? get_int_var(BEEP_MAX_VAR) : -1;
 	tab_max = get_int_var(TAB_VAR) ? get_int_var(TAB_MAX_VAR) : -1;
 	nds_max = get_int_var(ND_SPACE_MAX_VAR);
 	do_indent = get_int_var(INDENT_VAR);
-	words = (char *)get_string_var(WORD_BREAK_VAR);
+	words = (u_char *)get_string_var(WORD_BREAK_VAR);
 
 	if (!words)
-		words = ", ";
-	if (!(cont_ptr = (char *)get_string_var(CONTINUED_LINE_VAR)))
-		cont_ptr = (char *)empty_string;
+		words = (u_char *)", ";
+	if (!(cont_ptr = (u_char *)get_string_var(CONTINUED_LINE_VAR)))
+		cont_ptr = (u_char *)empty_string;
 
 	buffer[0] = 0;
 
 	/* Handle blank or non-existant lines */
 	if (!orig_str || !orig_str[0])
-		orig_str = space;
+		orig_str = (const u_char *)space;
 
 	if (!output_size)
 	{
@@ -571,7 +574,7 @@ const 	u_char	*ptr = NULL;
 
 			default:
 			{
-				if (*ptr == ' ' || strchr(words, *ptr))
+				if (*ptr == ' ' || strchr((const char *)words, *ptr))
 				{
 					if (indent == 0)
 					{
@@ -651,15 +654,15 @@ const 	u_char	*ptr = NULL;
 
 			c = buffer[word_break];
 			buffer[word_break] = 0;
-			malloc_strcpy((char **)&(output[line++]), buffer);
+			malloc_strcpy((char **)&(output[line++]), (const char *)buffer);
 
 			buffer[word_break] = c;
 
 			if (!*cont && do_indent && (indent < (max_cols / 3)) &&
-					(strlen(cont_ptr) < indent))
+					(strlen((const char *)cont_ptr) < indent))
 			{
 				cont = alloca(indent+10);
-				sprintf(cont, "%-*s", indent, cont_ptr);
+				sprintf((char *)cont, "%-*s", indent, (const char *)cont_ptr);
 			}
 			else if (!*cont && *cont_ptr)
 				cont = cont_ptr;
@@ -667,12 +670,12 @@ const 	u_char	*ptr = NULL;
 				word_break++;
 			buffer[pos] = 0;
 
-			pos_copy = alloca(strlen(buffer) + strlen(cont) + 20);
-			strcpy(pos_copy, buffer+word_break);
+			pos_copy = alloca(strlen((const char *)buffer) + strlen((const char *)cont) + 20);
+			strcpy((char *)pos_copy, (const char *)(buffer+word_break));
 			
-			strcpy (buffer, cont);
-			strcat (buffer, pos_copy);
-			col = pos = strlen(buffer);
+			strcpy ((char *)buffer, (const char *)cont);
+			strcat ((char *)buffer, (const char *)pos_copy);
+			col = pos = strlen((const char *)buffer);
 
 			word_break = 0;
 			newline = 0;
@@ -689,7 +692,7 @@ const 	u_char	*ptr = NULL;
 	buffer[pos++] = ALL_OFF;
 	buffer[pos] = 0;
 	if (*buffer)
-		malloc_strcpy((char **)&(output[line++]),buffer);
+		malloc_strcpy((char **)&(output[line++]),(const char *)buffer);
 
 	recursion--;
 	new_free(&output[line]);
@@ -753,7 +756,7 @@ static	int	add_to_scratch_window_display_list (Window *window, const unsigned ch
 		window->display_buffer_size++;
 	}
 
-	malloc_strcpy(&my_line->line, str);
+	malloc_strcpy(&my_line->line, (const char *)str);
 	window->cursor = window->scratch_line;
 
 	window->scratch_line++;
@@ -808,7 +811,7 @@ static int 	add_to_display_list (Window *window, const unsigned char *str)
 
 	/* Add to the display list */
 	window->display_ip->next = new_display_line(window->display_ip);
-	malloc_strcpy(&window->display_ip->line, str);
+	malloc_strcpy(&window->display_ip->line, (const char *)str);
 	window->display_ip = window->display_ip->next;
 	window->display_buffer_size++;
 	window->distance_from_display++;
@@ -1429,7 +1432,7 @@ void 	BX_repaint_window (Window *w, int start_line, int end_line)
 	for (count = start_line; count < end_line; count++)
 	{
 		if (!curr_line) break;
-		rite(window, curr_line->line);
+		rite(window, (const u_char *)curr_line->line);
 
 		if (curr_line == window->display_ip)
 			break;
@@ -1547,12 +1550,12 @@ Screen	* BX_create_new_screen(void)
 extern	Window	*BX_create_additional_screen (void)
 {
         Window  *win;
-        Screen  *oldscreen, *new;
+        Screen  *new;
         char    *displayvar,
                 *termvar;
         int     screen_type = ST_NOTHING;
         struct  sockaddr_in NewSock;
-        int     NsZ;
+        socklen_t     NsZ;
         int     s;
 	fd_set	fd_read;
 	struct	timeval	timeout;
@@ -1602,7 +1605,6 @@ extern	Window	*BX_create_additional_screen (void)
 		return NULL;
 	}
 
-	oldscreen = current_window->screen;
 	new = create_new_screen();
 
 	switch ((child = fork()))
@@ -1868,13 +1870,13 @@ void do_screens (fd_set *rd)
 
 			if (dumb_mode)
 			{
-				if (dgets(buffer, screen->fdin, 0, IO_BUFFER_SIZE, NULL))
+				if (dgets((char *)buffer, screen->fdin, 0, IO_BUFFER_SIZE, NULL))
 				{
-					*(buffer + strlen(buffer) - 1) = '\0';
+					*(buffer + strlen((const char *)buffer) - 1) = '\0';
 					if (get_int_var(INPUT_ALIASES_VAR))
-						parse_line(NULL, buffer, empty_string, 1, 0, 1);
+						parse_line(NULL, (char *)buffer, empty_string, 1, 0, 1);
 					else
-						parse_line(NULL, buffer, NULL, 1, 0, 1);
+						parse_line(NULL, (char *)buffer, NULL, 1, 0, 1);
 				}
 				else
 				{
@@ -2329,7 +2331,7 @@ unsigned char *BX_strip_ansi (const unsigned char *str)
 	 * The output string has a few extra chars on the end just 
 	 * in case you need to tack something else onto it.
 	 */
-	maxpos = strlen(str);
+	maxpos = strlen((const char *)str);
 	output = (u_char *)new_malloc(maxpos + 64);
 	pos = 0;
 

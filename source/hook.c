@@ -1756,7 +1756,7 @@ static void add_numeric_list (NumericList *item)
 
 static NumericList *find_numeric_list (int numeric)
 {
-	NumericList *tmp, *last = NULL;
+	NumericList *tmp, *last __attribute__((unused)) = NULL;
 
 	for (tmp = numeric_list; tmp; last = tmp, tmp = tmp->next)
 	{

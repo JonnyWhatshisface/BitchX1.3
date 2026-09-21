@@ -133,7 +133,7 @@ BUILT_IN_COMMAND(readlog)
  */ 
 static	int show_log(Window *window, char *name)
 {
-	Window	*old_window;
+	Window	*old_window __attribute__((unused));
 	int	rows = 0;
 	char	line[500];
 

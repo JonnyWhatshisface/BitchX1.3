@@ -620,7 +620,7 @@ static int glob3		(	Char *pathbuf,
 	if (pglob->gl_flags & GLOB_INSENSITIVE)
 		nocase = 1;
 
-	while ((dp = (*readdirfunc)(dirp))) 
+	while ((dp = ((struct dirent *(*)(void *))readdirfunc)(dirp))) 
 	{
 		register u_char *sc;
 		register Char *dc;

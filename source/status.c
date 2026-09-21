@@ -287,8 +287,7 @@ static	char	* convert_sub_format(char *format, char c, char *padded)
 	char	buffer[BIG_BUFFER_SIZE + 1];
 	static	char	bletch[] = "%% ";
 	char	*ptr = NULL;
-	int	dont_got_it = 1;
-	
+	int	dont_got_it __attribute__((unused)) = 1;
 	if (format == NULL)
 		return (NULL);
 	*buffer = (char) 0;
@@ -303,7 +302,7 @@ static	char	* convert_sub_format(char *format, char c, char *padded)
 			*ptr = (char) 0;
 			strmcat(buffer, format, BIG_BUFFER_SIZE);
 			*(ptr++) = '%';
-			if ((*ptr == c)/* && dont_got_it*/)
+			if (*ptr == c/* && dont_got_it*/)
 			{
 				dont_got_it = 0;
 				if (*padded)
@@ -447,7 +446,7 @@ unsigned char	lhs_fillchar[6],
 		*cp,
 		*start_rhs = 0,
 		*str = NULL, *ptr = NULL;
-int		in_rhs = 0,
+int		in_rhs __attribute__((unused)),
 		pr_lhs = 0,
 		pr_rhs = 0,
 		*prc = &pr_lhs;
@@ -473,7 +472,7 @@ int		in_rhs = 0,
 	 * with nothing but logical characters, which are then easy
 	 * to count. :-)
 	 */
-	str = strip_ansi(buffer);
+	str = strip_ansi((const unsigned char *)buffer);
 
 	/*
 	 * Count out the characters.
@@ -595,8 +594,8 @@ int		in_rhs = 0,
 					BIG_BUFFER_SIZE);
 	}
 #endif
-	strcpy(buffer, lhs_buffer);
-	strmcat(buffer, rhs_buffer, BIG_BUFFER_SIZE);
+	strcpy(buffer, (const char *)lhs_buffer);
+	strmcat(buffer, (const char *)rhs_buffer, BIG_BUFFER_SIZE);
 	new_free(&str);
 }
 
@@ -647,15 +646,15 @@ unsigned char	buffer[2 * BIG_BUFFER_SIZE + 1];
 		{
 			if (status_expandos[i].map != map || status_expandos[i].key != key)
 				continue;
-			strmcat(buffer, (status_expandos[i].callback_function)(win), BIG_BUFFER_SIZE);
-			pos = strlen(buffer);
+			strmcat((char *)buffer, (const char *)(status_expandos[i].callback_function)(win), BIG_BUFFER_SIZE);
+			pos = strlen((const char *)buffer);
 			break;
 		}
 	}
 
 	buffer[pos] = 0;
-	fix_status_buffer(win, buffer, 0);
-	return m_strdup(buffer);
+	fix_status_buffer(win, (char *)buffer, 0);
+	return (char *)m_strdup((const char *)buffer);
 }
 
 void BX_build_status(Window *win, char *format, int unused)
@@ -722,7 +721,7 @@ void make_status(Window *win)
 			*cp,
 			*start_rhs = 0,
 			*str;
-		int	in_rhs = 0,
+		int	in_rhs __attribute__((unused)),
 			pr_lhs = 0,
 			pr_rhs = 0,
 			line = status_line,
@@ -743,7 +742,7 @@ void make_status(Window *win)
 		else
 			len = 0;
 		str = &buffer[len];                                        
-		snprintf(str, BIG_BUFFER_SIZE - 1, 
+		snprintf((char *)str, BIG_BUFFER_SIZE - 1, 
 			win->wset->status_format[line],
 			func_value[0], func_value[1], func_value[2],
 			func_value[3], func_value[4], func_value[5],
@@ -775,8 +774,8 @@ void make_status(Window *win)
 		{
 			int  af = 0;
 
-			str = expand_alias(buffer, empty_string, &af, NULL);
-			strmcpy(buffer, str, BIG_BUFFER_SIZE);
+			str = (unsigned char *)expand_alias((const char *)buffer, empty_string, &af, NULL);
+			strmcpy((char *)buffer, (const char *)str, BIG_BUFFER_SIZE);
 			new_free(&str);
 		}
 
@@ -786,7 +785,7 @@ void make_status(Window *win)
 		 * with nothing but logical characters, which are then easy
 		 * to count. :-)
 		 */
-		str = strip_ansi(buffer);
+	str = strip_ansi((const unsigned char *)buffer);
 
 		/*
 		 * Count out the characters.
@@ -900,7 +899,7 @@ void make_status(Window *win)
 
 			numf = win->screen->co - pr_lhs - pr_rhs  -1;
 			while (numf-- >= 0)
-				strmcat(lhs_buffer, lhs_fillchar, 
+				strmcat((char *)lhs_buffer, (const char *)lhs_fillchar, 
 						BIG_BUFFER_SIZE);
 		}
 
@@ -912,13 +911,13 @@ void make_status(Window *win)
 			int chars = win->screen->co - pr_lhs - 1;
 
 			while (chars-- >= 0)
-				strmcat(lhs_buffer, lhs_fillchar, 
+				strmcat((char *)lhs_buffer, (const char *)lhs_fillchar, 
 						BIG_BUFFER_SIZE);
 		}
 
-		strcpy(buffer, lhs_buffer);
-		strmcat(buffer, rhs_buffer, BIG_BUFFER_SIZE);
-		strmcat(buffer, ALL_OFF_STR, BIG_BUFFER_SIZE);
+		strcpy((char *)buffer, (const char *)lhs_buffer);
+		strmcat((char *)buffer, (const char *)rhs_buffer, BIG_BUFFER_SIZE);
+		strmcat((char *)buffer, (const char *)ALL_OFF_STR, BIG_BUFFER_SIZE);
 		new_free(&str);
 
 		do_hook(STATUS_UPDATE_LIST, "%d %d %s", 
@@ -932,11 +931,11 @@ void make_status(Window *win)
 		}
 		
 		if (!win->wset->status_line[status_line] ||
-			strcmp(buffer, win->wset->status_line[status_line]))
+			strcmp((const char *)buffer, win->wset->status_line[status_line]))
 
 		{
 			char *st = NULL;
-			malloc_strcpy(&win->wset->status_line[status_line], buffer);
+			malloc_strcpy(&win->wset->status_line[status_line], (const char *)buffer);
 			output_screen = win->screen;
 			st = cparse((line==3)?FORMAT_STATUS3_FSET:(line==2)?FORMAT_STATUS2_FSET:(line==1)?FORMAT_STATUS1_FSET:FORMAT_STATUS_FSET, buffer);
 			if (!ansi)
@@ -948,7 +947,7 @@ void make_status(Window *win)
 			else
 				term_move_cursor(0,win->bottom+status_line);
 
-			output_line(st);
+			output_line((const u_char *)st);
 			cursor_in_display(win);
 			term_bold_off();
 		} 

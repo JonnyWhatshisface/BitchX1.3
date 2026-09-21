@@ -1371,7 +1371,7 @@ extern 	char *do_notice_ctcp (char *from, char *to, char *str)
 	if (!in_ctcp_flag)
 		in_ctcp_flag = -1;
 
-	tbuf = stripansi(str);
+	tbuf = (char *)stripansi((unsigned char *)str);
 	strmcpy(local_ctcp_buffer, tbuf, IRCD_BUFFER_SIZE-2);
 	new_free(&tbuf);
 		

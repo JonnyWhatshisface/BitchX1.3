@@ -187,17 +187,17 @@ ChannelList *chan;
 	if (get_cset_int_var(chan->csets, ANNOY_KICK_CSET) && !nick_isop(nick))
 	{	
 		char *buffer = NULL;
-		if (char_fucknut(ptr, '\002', 12))
+		if (char_fucknut((unsigned char *)ptr, '\002', 12))
 			malloc_sprintf(&buffer, "KICK %s %s :%s",to, from, "autokick for \002bold\002");
-		else if (char_fucknut(ptr, '\007', 1))
+		else if (char_fucknut((unsigned char *)ptr, '\007', 1))
 			malloc_sprintf(&buffer, "KICK %s %s :%s", to, from, "autokick for beeping");
-		else if (char_fucknut(ptr, '\003', 12))
+		else if (char_fucknut((unsigned char *)ptr, '\003', 12))
 			malloc_sprintf(&buffer, "KICK %s %s :%s", to, from, "autokick for \037mirc color\037");
-		else if (char_fucknut(ptr, '\037', 0))
+		else if (char_fucknut((unsigned char *)ptr, '\037', 0))
 			malloc_sprintf(&buffer, "KICK %s %s :%s", to, from, "autokick for \037underline\037");
-		else if (char_fucknut(ptr, '\026', 12))
+		else if (char_fucknut((unsigned char *)ptr, '\026', 12))
 			malloc_sprintf(&buffer, "KICK %s %s :%s", to, from, "autokick for \026inverse\026");
-		else if (caps_fucknut(ptr))
+		else if (caps_fucknut((unsigned char *)ptr))
 			malloc_sprintf(&buffer, "KICK %s %s :%s", to, from, "autokick for CAPS LOCK");
 		else if (strstr(ptr, "0000027fed"))
 		{
@@ -408,7 +408,7 @@ static	void p_wallops(char *from, char **ArgList)
 	{
 		/* The old server check, don't use the whois stuff for servers */
 		int	level;
-		char	*high;
+		char	*high __attribute__((unused));
 		switch (check_ignore(from, FromUserHost, NULL, IGNORE_WALLOPS, NULL))
 		{
 		case (IGNORED):
@@ -450,9 +450,9 @@ static	void p_privmsg(char *from, char **Args)
 
 	char	*ptr = NULL,
 		*to,
-		*high;
+		*high __attribute__((unused));
 
-	static int com_do_log, com_lines = 0;
+	static int com_do_log __attribute__((unused)), com_lines __attribute__((unused)) = 0;
 
 	ChannelList *channel = NULL;
 	NickList *tmpnick = NULL;
@@ -963,7 +963,7 @@ static	void p_authenticate(char *from, char **ArgList)
 void add_user_who (WhoEntry *w, char *from, char **ArgList)
 {
 	char *userhost;
-	ChannelList *chan;
+	ChannelList *chan __attribute__((unused));
 	int op = 0, voice = 0;
 
 	/* Obviously this is safe. */
@@ -1150,7 +1150,7 @@ static	void p_channel(char *from, char **ArgList)
 				{
 					for (p = FromUserHost; *p; p++)
 					{
-						char *user, *host;
+						char *user __attribute__((unused)), *host;
 						if (!strchr(lame_chars, *p))
 							continue;
 						user = LOCAL_COPY(FromUserHost);
@@ -1211,7 +1211,7 @@ got_request:
 
 static	void p_invite(char *from, char **ArgList)
 {
-	char	*high;
+	char	*high __attribute__((unused));
 
 	
 	switch (check_ignore(from, FromUserHost, ArgList[1] ? ArgList[1] : NULL, IGNORE_INVITES, NULL))
@@ -1446,7 +1446,7 @@ static void check_bitch_mode(char *from, char *uh, char *channel, char *line, Ch
 NickList *nick;
 char *new_mode = NULL;
 char *n = NULL;
-time_t right_now;
+time_t right_now __attribute__((unused));
 
 	
 	if (!from || !chan || (chan && (!get_cset_int_var(chan->csets, BITCH_CSET) || !chan->have_op)))
@@ -1907,7 +1907,7 @@ void parse_server(char *orig_line)
 #ifdef WANT_DLL
 	RawDll	*raw = NULL;
 #endif
-	protocol_command *retval;
+	protocol_command *retval __attribute__((unused));
 	int	loc;
 	int	cnt;
 

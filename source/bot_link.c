@@ -116,7 +116,7 @@ int i;
 
 	for (i = 0; i < get_max_fd()+1; i++)
 	{
-		DCC_int *n;
+		DCC_int *n __attribute__((unused));
 		if (!check_dcc_socket(i) || (idx == i)) continue;
 		s = get_socket(i);
 		if (!(s->flags & DCC_ACTIVE)) continue;
@@ -131,7 +131,7 @@ int i;
 
 BUILT_IN_COMMAND(csay)
 {
-int found = 0;
+int found __attribute__((unused)) = 0;
 SocketList *s;
 char *t = NULL;
 int i;
@@ -143,7 +143,7 @@ int i;
 		s = get_socket(i);
 		if (s->flags & DCC_ACTIVE)
 		{
-			DCC_int *n;
+			DCC_int *n __attribute__((unused));
 			n = get_socketinfo(i);
 			if ((s->flags & DCC_TYPES) == DCC_BOTMODE)
 			{
@@ -351,7 +351,7 @@ int handle_dcc_bot(int idx, char *param)
 {
 char *code;
 int i = 0;
-int found = 0;
+int found __attribute__((unused)) = 0;
 	code = next_arg(param, &param);
 	if (!code)
 		return 0;
@@ -395,7 +395,7 @@ int send_who_to(int idx, char *from, int arg)
 {
 /*	dcc_printf(idx, "priv %s %s testing\n", get_server_nickname(from_server), from);*/
 SocketList *s;
-int found = 0;
+int found __attribute__((unused)) = 0;
 int i;
 	for (i = 0; i < get_max_fd()+1; i++)
 	{
@@ -479,9 +479,9 @@ char buffer[IRCD_BUFFER_SIZE+1];
 int tell_who(int idx, char *arg)
 {
 SocketList *s;
-DCC_int *n;
+DCC_int *n __attribute__((unused));
 int i;
-int found = 0;
+int found __attribute__((unused)) = 0;
 	for (i = 0; i < get_max_fd()+1; i++)
 	{
 		if (!check_dcc_socket(i)) continue;
@@ -516,7 +516,7 @@ int found = 0;
 
 int send_who(int idx, char *arg)
 {
-int found = 0;
+int found __attribute__((unused)) = 0;
 	if (arg && *arg)
 	{
 		if (!my_stricmp(arg, get_server_nickname(from_server)))
@@ -550,8 +550,8 @@ int found = 0;
 
 int tell_whom(int idx, char *arg)
 {
-DCC_int *n;
-int found = 0;
+DCC_int *n __attribute__((unused));
+int found __attribute__((unused)) = 0;
 int i;
 SocketList *s;
 	for (i = 0; i < get_max_fd()+1; i++)
@@ -571,7 +571,7 @@ SocketList *s;
 
 int send_whom(int idx, char *arg)
 {
-int found = 0;
+int found __attribute__((unused)) = 0;
 int i;
 int j;
 SocketList *s, *s1 = NULL;
@@ -598,7 +598,7 @@ SocketList *s, *s1 = NULL;
 
 int tand_priv (int idx, char *args)
 {
-char *to, *from, *p, *i_dx;
+char *to, *from __attribute__((unused)), *p, *i_dx;
 	from = next_arg(args, &args);
 	to = next_arg(args, &args);
 	p = strchr(to, '@');
@@ -765,7 +765,7 @@ int cmd_ircii(int idx, char *par)
 
 int cmd_ops(int idx, char *par)
 {
-DCC_int *n;
+DCC_int *n __attribute__((unused));
 	n = get_socketinfo(idx);
 	if (n && n->ul)
 	{
@@ -803,7 +803,7 @@ char *pass = NULL;
 	s = get_socket(idx);
 	if (check_dcc_socket(idx) && !(s->flags & DCC_BOTCHAT))
 	{
-		DCC_int *n;
+		DCC_int *n __attribute__((unused));
 		n = (DCC_int *)s->info;
 		pass = next_arg(par, &par);
 		if (get_int_var(BOT_MODE_VAR))
@@ -840,7 +840,7 @@ char *pass = NULL;
 	s = get_socket(idx);
 	if (check_dcc_socket(idx))
 	{
-		DCC_int *n;
+		DCC_int *n __attribute__((unused));
 		char *main_pass = NULL;
 		char *user_pass = NULL;
 		int got_it = 0;
@@ -1011,7 +1011,7 @@ int cmd_help(int idx, char *par)
 	command = next_arg(par, &par);
 	if (!command)
 	{
-		DCC_int *n;
+		DCC_int *n __attribute__((unused));
 		n = get_socketinfo(idx);
 		dcc_printf(idx, "DCC commands :\n");
 		for (i = 1, j = 1; C_dcc[i-1].name; i++)

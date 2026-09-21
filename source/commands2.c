@@ -5,6 +5,16 @@
  * as code in some cases.
  */
  
+/*
+ * This translation unit intentionally contains CP437-encoded glyphs
+ * (ASCII-art logos, box-drawing and UI accents) which are converted to
+ * UTF-8 at display time. The source encoding is deliberately not UTF-8,
+ * so suppress clang's -Winvalid-source-encoding for this file.
+ */
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Winvalid-source-encoding"
+#endif
+
 #include "irc.h"
 static char cvsrevision[] = "$Id: commands2.c 163 2012-04-30 08:05:04Z keaston $";
 CVS_REVISION(commands2_c)
@@ -146,14 +156,14 @@ int to_chan = 0;
 #ifdef ONLY_STD_CHARS
 						put_it("%s", convert_output_format("%B------------------------------------------------------------------------------", NULL, NULL));
 #else
-						put_it("%s", convert_output_format("%BÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ", NULL, NULL));
+						put_it("%s", convert_output_format("%Bï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½", NULL, NULL));
 #endif
 						once++;
 					}
 					put_it("%s", convert_output_format("$[10]0 %C$1 $2%w  %B$[16]3  %R$[6]4  %M$[4]5 $[4]6 $[4]7 $[4]8$[-4]9  $[-4]10 $[-6]11",
 						"%s %c %c %s %u %u %u %u %u %u %u %u",
 						to_chan ? tmp->channel: user->nick, 
-						nick_isop(user)? '@':'ÿ',nick_isvoice(user)?'v':'ÿ',
+						nick_isop(user)? '@':'~',nick_isvoice(user)?'v':' ',
 #ifdef WANT_USERLIST
 						user->userlist?convert_flags(user->userlist->flags):"none", 
 						user->shitlist?user->shitlist->level: 0,
@@ -404,7 +414,7 @@ char buffer[BIG_BUFFER_SIZE+1];
 			}
 			modelock++;
 		}
-		if (chan && chan->have_op && buffer)
+		if (chan && chan->have_op && buffer[0] != 0)
 			send_to_server("MODE %s %s", chan->channel, buffer);
 		new_free(&save);
 		new_free(&save1);
@@ -771,11 +781,11 @@ put_it("%s", convert_output_format("%G|   %Cdisp%clay_ansi  %K[%W$[-3]0%K]    %W
 
 #else
 
-put_it("%s", convert_output_format("%GÚÄÄÄÄÄ---%gÄ%G-%K[ %WBitchX %wToggles %K]-%gÄÄ%G-%gÄÄÄÄÄÄ---%KÄ%g--%KÄÄ%g-%KÄÄÄÄÄÄÄÄÄ--- --  - --- -- -", NULL));
-put_it("%s", convert_output_format("%G³   %Cauto_ns%clookup %K[%W$[-3]0%K]    %Cctcp_f%clood_protection %K[%W$[-3]1%K]    %Cbeep%c        %K[%W$[-3]2%K]", "%s %s %s", on_off(get_int_var(AUTO_NSLOOKUP_VAR)), on_off(get_int_var(CTCP_FLOOD_PROTECTION_VAR)), on_off(get_int_var(BEEP_VAR))));
-put_it("%s", convert_output_format("%G³   %Cpub%cflood      %K[%W$[-3]0%K]    %Cflood_p%crotection      %K[%W$[-3]1%K]    %Ckickf%clood   %K[%W$[-3]2%K]", "%s %s %s", on_off(get_int_var(PUBFLOOD_VAR)), on_off(get_int_var(FLOOD_PROTECTION_VAR)), on_off(get_int_var(KICKFLOOD_VAR))));
-put_it("%s", convert_output_format("%g³   %Cdcc_a%cutoget   %K[%W$[-3]0%K]    %Cflood_k%cick            %K[%W$[-3]1%K]    %Cmsg%clog      %K[%W$[-3]2%K]", "%s %s %s", on_off(get_int_var(DCC_AUTOGET_VAR)), on_off(get_int_var(FLOOD_KICK_VAR)), on_off(get_int_var(MSGLOG_VAR))));
-put_it("%s", convert_output_format("%G³   %Cll%cook         %K[%W$[-3]0%K]    %Cdeop%cflood             %K[%W$[-3]1%K]    %Cjoin%cflood   %K[%W$[-3]2%K]", "%s %s %s", on_off(get_int_var(LLOOK_VAR)), on_off(get_int_var(DEOPFLOOD_VAR)), on_off(get_int_var(JOINFLOOD_VAR))));
+put_it("%s", convert_output_format("%Gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½---%gï¿½%G-%K[ %WBitchX %wToggles %K]-%gï¿½ï¿½%G-%gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½---%Kï¿½%g--%Kï¿½ï¿½%g-%Kï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½--- --  - --- -- -", NULL));
+put_it("%s", convert_output_format("%Gï¿½   %Cauto_ns%clookup %K[%W$[-3]0%K]    %Cctcp_f%clood_protection %K[%W$[-3]1%K]    %Cbeep%c        %K[%W$[-3]2%K]", "%s %s %s", on_off(get_int_var(AUTO_NSLOOKUP_VAR)), on_off(get_int_var(CTCP_FLOOD_PROTECTION_VAR)), on_off(get_int_var(BEEP_VAR))));
+put_it("%s", convert_output_format("%Gï¿½   %Cpub%cflood      %K[%W$[-3]0%K]    %Cflood_p%crotection      %K[%W$[-3]1%K]    %Ckickf%clood   %K[%W$[-3]2%K]", "%s %s %s", on_off(get_int_var(PUBFLOOD_VAR)), on_off(get_int_var(FLOOD_PROTECTION_VAR)), on_off(get_int_var(KICKFLOOD_VAR))));
+put_it("%s", convert_output_format("%gï¿½   %Cdcc_a%cutoget   %K[%W$[-3]0%K]    %Cflood_k%cick            %K[%W$[-3]1%K]    %Cmsg%clog      %K[%W$[-3]2%K]", "%s %s %s", on_off(get_int_var(DCC_AUTOGET_VAR)), on_off(get_int_var(FLOOD_KICK_VAR)), on_off(get_int_var(MSGLOG_VAR))));
+put_it("%s", convert_output_format("%Gï¿½   %Cll%cook         %K[%W$[-3]0%K]    %Cdeop%cflood             %K[%W$[-3]1%K]    %Cjoin%cflood   %K[%W$[-3]2%K]", "%s %s %s", on_off(get_int_var(LLOOK_VAR)), on_off(get_int_var(DEOPFLOOD_VAR)), on_off(get_int_var(JOINFLOOD_VAR))));
 put_it("%s", convert_output_format("%g|   %Cauto_w%chowas   %K[%W$[-3]0%K]    %Cverb%cose_ctcp          %K[%W$[-3]1%K]    %Cnickfl%cood   %K[%W$[-3]2%K]", "%s %s %s", on_off(get_int_var(AUTO_WHOWAS_VAR)), on_off(get_int_var(CTCP_VERBOSE_VAR)), on_off(get_int_var(NICKFLOOD_VAR))));
 put_it("%s", convert_output_format("%G:   %Ccl%coak         %K[%W$[-3]0%K]    %Coper%cview              %K[%W$[-3]1%K]    %Cshit%clist    %K[%W$[-3]2%K]", "%s %s %s", on_off(get_int_var(CLOAK_VAR)), on_off(get_int_var(OV_VAR)), on_off(get_int_var(SHITLIST_VAR))));
 put_it("%s", convert_output_format("%G:   %Ckick_o%cps      %K[%W$[-3]0%K]    %Cannoy%c_kick            %K[%W$[-3]1%K]    %Cuser%clist    %K[%W$[-3]2%K]", "%s %s %s", on_off(get_int_var(KICK_OPS_VAR)), on_off(get_int_var(ANNOY_KICK_VAR)), on_off(get_int_var(USERLIST_VAR))));
@@ -828,7 +838,7 @@ else
 		} else if (!my_strnicmp(arg, "ctcp_flood_protection", 6))
 		{
 			var = CTCP_FLOOD_PROTECTION_VAR;
-			str = "$G %cToggled %GCtcp Flood Protection %K[%W$[-3]0%K]","%s";
+			str = "$G %cToggled %GCtcp Flood Protection %K[%W$[-3]0%K]";
 		} else if (!my_strnicmp(arg, "flood_protection",7))
 		{
 			var = FLOOD_PROTECTION_VAR;
@@ -863,7 +873,7 @@ else
 		} else if (!my_strnicmp(arg, "kickflood",5))
 		{
 			var = KICKFLOOD_VAR;
-			str = "$G %cToggled %GKick Flood %K[%W$[-3]0%K]","%s";
+			str = "$G %cToggled %GKick Flood %K[%W$[-3]0%K]";
 		} else if (!my_strnicmp(arg, "msglog", 3))
 		{
 			var = MSGLOG_VAR;
@@ -891,11 +901,11 @@ else
 		} else if (!my_strnicmp(arg, "auto_rejoin", 8))
 		{
 			var = AUTO_REJOIN_VAR;
-			str = "$G %cToggled %GAuto_Rejoin %K[%W$[-3]0%K]","%s";
+			str = "$G %cToggled %GAuto_Rejoin %K[%W$[-3]0%K]";
 		} else if (!my_strnicmp(arg, "nick_completion", 6))
 		{
 			var = NICK_COMPLETION_VAR;
-			str = "$G %cToggled %GNick Completion %K[%W$[-3]0%K]","%s";
+			str = "$G %cToggled %GNick Completion %K[%W$[-3]0%K]";
 		} else if (!my_strnicmp(arg, "aop", 3))
 		{
 			var = AOP_VAR;
@@ -980,7 +990,7 @@ extern char tcl_versionstr[];
 struct utsname buf;
 	
 	uname(&buf);
-	malloc_strcpy(&version_buf, stripansicodes(convert_output_format(fget_string_var(FORMAT_VERSION_FSET), "%s %s %s %s %s", irc_version, internal_version, buf.sysname, buf.release?buf.release:empty_string, tcl_versionstr)));
+	malloc_strcpy(&version_buf, stripansicodes(convert_output_format(fget_string_var(FORMAT_VERSION_FSET), "%s %s %s %s %s", irc_version, internal_version, buf.sysname, buf.release != NULL ? buf.release : empty_string, tcl_versionstr)));
 #else
 	malloc_strcpy(&version_buf, stripansicodes(convert_output_format(fget_string_var(FORMAT_VERSION_FSET), "%s %s %s %s %s", irc_version, internal_version, "unknown", tcl_versionstr, empty_string)));
 #endif
@@ -1701,11 +1711,11 @@ put_it("%s", convert_output_format("%G| %CS%cerv Squits     %K[%W$[-4]0%K]    %C
 
 #else
 
-put_it("%s", convert_output_format("%GÚÄÄÄÄÄ---%gÄ%G-%K[ %WServer %wStats %K]-%gÄÄ%G-%gÄÄÄÄÄÄ---%KÄ%g--%KÄÄ%g-%KÄÄÄÄÄÄÄÄÄ--- --  - --- -- -", NULL));
-put_it("%s", convert_output_format("%G³ %CN%cick Collisions %K[%W$[-4]0%K]    %CO%cper Kills   %K[%W$[-4]1%K]", "%l %l", nick_collisions, oper_kills));
-put_it("%s", convert_output_format("%G³ %CF%cake Modes      %K[%W$[-4]0%K]    %CU%cnauth       %K[%W$[-4]1%K]", "%l %l",serv_fakes, serv_unauth));
-put_it("%s", convert_output_format("%g³ %CH%cigh Traffic    %K[%W$[-4]0%K]    %CN%corm Traffic %K[%W$[-4]1%K]", "%l %l",serv_split, serv_rejoin));
-put_it("%s", convert_output_format("%G³ %CT%cotal Clients   %K[%W$[-4]0%K]    %CS%cerv rehash  %K[%W$[-4]1%K]", "%l %l",client_connects, serv_rehash));
+put_it("%s", convert_output_format("%Gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½---%gï¿½%G-%K[ %WServer %wStats %K]-%gï¿½ï¿½%G-%gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½---%Kï¿½%g--%Kï¿½ï¿½%g-%Kï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½--- --  - --- -- -", NULL));
+put_it("%s", convert_output_format("%Gï¿½ %CN%cick Collisions %K[%W$[-4]0%K]    %CO%cper Kills   %K[%W$[-4]1%K]", "%l %l", nick_collisions, oper_kills));
+put_it("%s", convert_output_format("%Gï¿½ %CF%cake Modes      %K[%W$[-4]0%K]    %CU%cnauth       %K[%W$[-4]1%K]", "%l %l",serv_fakes, serv_unauth));
+put_it("%s", convert_output_format("%gï¿½ %CH%cigh Traffic    %K[%W$[-4]0%K]    %CN%corm Traffic %K[%W$[-4]1%K]", "%l %l",serv_split, serv_rejoin));
+put_it("%s", convert_output_format("%Gï¿½ %CT%cotal Clients   %K[%W$[-4]0%K]    %CS%cerv rehash  %K[%W$[-4]1%K]", "%l %l",client_connects, serv_rehash));
 put_it("%s", convert_output_format("%g| %CC%client exits    %K[%W$[-4]0%K]    %CK%c-lines adds %K[%W$[-4]1%K]", "%l %l",client_exits, serv_klines));
 put_it("%s", convert_output_format("%G: %CC%client Floods   %K[%W$[-4]0%K]    %CS%ctats reqs   %K[%W$[-4]1%K]", "%l %l",client_floods, stats_req));
 put_it("%s", convert_output_format("%G: %CI%cnvalid User    %K[%W$[-4]0%K]    %CO%cper Reqs    %K[%W$[-4]1%K]", "%l %l",client_invalid, oper_requests));
@@ -2459,7 +2469,7 @@ struct param parm;
 
 void handle_reconnect(int s)
 {
-int len;
+ socklen_t len;
 struct sockaddr_in addr;
 int n;
 	memset(&addr, 0, sizeof(addr));
@@ -2468,7 +2478,7 @@ int n;
 	alarm(10);
 	n = my_accept(s, (struct sockaddr *)&addr, &len);
 	alarm(0);
-	if (n < 0 || getpeername(n, (struct sockaddr *)&addr, &len) < 0)
+	if (n < 0 || getpeername(n, (struct sockaddr *)&addr, (socklen_t *)&len) < 0)
 	{
 		put_it("%d %s", errno, strerror(errno));
 		if ( n > -1) close(n);
@@ -2527,7 +2537,7 @@ int n;
 		new_open(n);
 
 
-		term_init((parm.termid && *parm.termid) ? parm.termid : NULL);
+		term_init((parm.termid[0] != '\0') ? parm.termid : NULL);
 		reset_cols(parm.cols);
 		reset_lines(parm.rows);
 		reinit_term(main_screen->fdin);

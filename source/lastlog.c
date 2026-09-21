@@ -610,14 +610,14 @@ int logmsg(unsigned long log_type, char *from, int flag, char *format, ...)
 				return 0;
 			if (!(format = fget_string_var(FORMAT_MSGLOG_FSET)))
 				format = "[$[10]0] [$1] - $2-";
-			lines = split_up_line(stripansicodes(convert_output_format(format, "%s %s %s %s", type, timestr, from, msglog_buffer)), 80);
+			lines = split_up_line((const unsigned char *)stripansicodes(convert_output_format(format, "%s %s %s %s", type, timestr, from, msglog_buffer)), 80);
 			for ( ; *lines; lines++)
 			{
 				char *local_copy;
-				int len = strlen(*lines) * 2 + 1;
+				int len = strlen((const char *)*lines) * 2 + 1;
 				if (!*lines || !**lines) break;
 				local_copy = alloca(len);
-				strcpy(local_copy, *lines);
+				strcpy(local_copy, (const char *)*lines);
 
 				if (local_copy[strlen(local_copy)-1] == ALL_OFF)
 					local_copy[strlen(local_copy)-1] = 0;

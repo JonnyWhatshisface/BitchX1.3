@@ -770,10 +770,10 @@ int	BX_my_strnicmp (const char *str1, const char *str2, size_t n)
 /* my_strnstr: case insensitive version of strstr */
 int	BX_my_strnstr (register const unsigned char *str1, register const unsigned char *str2, register size_t n)
 {
-	char *p = (char *)str1;
+	const unsigned char *p = str1;
 	if (!p) return 0;
-	for (; *p; p++)
-		if (!strncasecmp(p, str2, strlen(str2)))
+	for (; *p && n > 0; p++, n--)
+		if (!strncasecmp((const char *)p, (const char *)str2, strlen((const char *)str2)))
 			return 1;
 	return 0;
 }
@@ -1328,7 +1328,7 @@ void	BX_ircpanic (char *format, ...)
 	yell("An unrecoverable logic error has occured.");
 	yell("Please email " BUG_EMAIL " and include the following message:");
 
-	yell("Panic: [%s:%s %s]", irc_version, buffer, cx_function?cx_function:empty_string);
+	yell("Panic: [%s:%s %s]", irc_version, buffer, cx_function[0] != '\0' ? cx_function : empty_string);
 	dump_call_stack();
 	irc_exit(1, "BitchX panic... Could it possibly be a bug?  Nahhhh...", NULL);
 }
@@ -1995,6 +1995,10 @@ char *BX_m_e3cat (char **one, const char *yes1, const char *yes2)
 }
 
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-non-prototype"
+#endif
 double strtod();
 extern int BX_check_val (char *sub)
 {
@@ -2818,6 +2822,10 @@ u_char	*BX_strcpy_nocolorcodes (u_char *dest, const u_char *source)
 	return save;
 }
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-non-prototype"
+#endif
 char *crypt();
 
 char *BX_cryptit(const char *string) 
@@ -2960,7 +2968,7 @@ size_t	BX_mangle_line	(char *incoming, int how, size_t how_much)
 		char *output;
 
 		strip_ansi_never_xlate = 1;	/* XXXXX */
-		output = strip_ansi(incoming);
+		output = (char *)strip_ansi((const unsigned char *)incoming);
 		strip_ansi_never_xlate = 0;	/* XXXXX */
 		if (strlcpy(incoming, output, how_much) > how_much)
 			say("Mangle_line truncating results (%d > %d) - "
@@ -2982,7 +2990,7 @@ size_t	BX_mangle_line	(char *incoming, int how, size_t how_much)
 						rhs = 0;
 				char 		*end;
 
-				end = (char *)skip_ctl_c_seq(s, &lhs, &rhs, 0);
+				end = (char *)skip_ctl_c_seq((const unsigned char *)s, &lhs, &rhs, 0);
 				if (!(stuff & STRIP_COLOR))
 				{
 					while (s < end)

@@ -13,6 +13,16 @@
 #define MAXDNAME 100
 #endif
 
+/*
+ * This translation unit intentionally contains CP437-encoded glyphs
+ * (ASCII-art logos, box-drawing and UI accents) which are converted to
+ * UTF-8 at display time. The source encoding is deliberately not UTF-8,
+ * so suppress clang's -Winvalid-source-encoding for this file.
+ */
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Winvalid-source-encoding"
+#endif
+
 #include "irc.h"
 static char cvsrevision[] = "$Id: server.c 212 2012-09-20 02:36:48Z tcava $";
 CVS_REVISION(server_c)
@@ -1297,7 +1307,7 @@ noidentwd:
 	if (*server_name != '/')
 	{
 		address_len = sizeof(struct sockaddr_foobar);
-		getsockname(new_des, (struct sockaddr *) localaddr, &address_len);
+		getsockname(new_des, (struct sockaddr *) localaddr, (socklen_t *)&address_len);
 		if ((server_list[from_server].local_addr.sf_family = localaddr->sf_family) == AF_INET)
 			memcpy(&server_list[from_server].local_addr.sf_addr, &localaddr->sf_addr, sizeof(struct in_addr));
 #ifdef IPV6
@@ -2336,8 +2346,8 @@ void	register_server (int ssn_index, char *nick)
 
 	change_server_nickname(ssn_index, nick);
 
-	server_list[ssn_index].login_flags &= ~LOGGED_IN;
-	server_list[ssn_index].login_flags &= ~CLOSE_PENDING;
+	server_list[ssn_index].login_flags &= ~(unsigned int)(USER_MODE << 29);
+	server_list[ssn_index].login_flags &= ~(unsigned int)(USER_MODE << 30);
 	server_list[ssn_index].last_msg = now;
 	server_list[ssn_index].eof = 0;
 /*	server_list[ssn_index].connected = 1; XXX: We aren't sure yet */
@@ -3466,7 +3476,7 @@ void show_server_map (void)
 #ifdef ONLY_STD_CHARS
 	char *ascii="-> ";
 #else
-	char *ascii = "юд> ";
+	char *ascii = "О©╫О©╫> ";
 #endif			    
 	if (map) prevdist = map->hopcount;
 

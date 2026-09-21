@@ -753,7 +753,7 @@ static	void	help_put_it	(const char *topic, const char *format, ...)
 			who_level = LOG_HELP;
 			if (help_window)
 				target_window = help_window;
-			add_to_screen(putbuf);
+			add_to_screen((unsigned char *)putbuf);
 			target_window = old_target_window;
 			who_level = old_level;
 		}

@@ -692,7 +692,7 @@ void BX_move_window(Window *window, int offset)
 void BX_resize_window(int how, Window *window, int offset)
 {
 	Window	*other;
-	int	after,
+	int	after __attribute__((unused)),
 		window_size,
 		other_size;
 
@@ -2471,8 +2471,7 @@ void    BX_set_scrollback_size (Window *w, char *unused, int size)
  * is_window_name_unique: checks the given name vs the names of all the
  * windows and returns true if the given name is unique, false otherwise 
  */
-int BX_is_window_name_unique(name)
-	char	*name;
+int BX_is_window_name_unique(char *name)
 {
 	Window	*tmp = NULL;
 

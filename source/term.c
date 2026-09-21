@@ -74,24 +74,45 @@ void put_it(const char *str, ...) { return; }
 
 /* Systems cant seem to agree where to put these... */
 #ifdef HAVE_TERMINFO
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-non-prototype"
+#endif
 extern	int		setupterm();
 extern	char		*tigetstr();
 extern	int		tigetnum();
 extern	int		tigetflag();
-#define Tgetstr(x, y) 	tigetstr(x.iname)
-#define Tgetnum(x) 	tigetnum(x.iname);
-#define Tgetflag(x) 	tigetflag(x.iname);
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+#define Tgetstr(x, y) 	tigetstr((char *)(x).iname)
+#define Tgetnum(x) 	tigetnum((char *)(x).iname);
+#define Tgetflag(x) 	tigetflag((char *)(x).iname);
 #else
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-non-prototype"
+#endif
 extern	int		tgetent();
 extern	char		*tgetstr();
 extern	int		tgetnum();
 extern	int		tgetflag();
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 #define Tgetstr(x, y) 	tgetstr(x.tname, &y)
 #define Tgetnum(x) 	tgetnum(x.tname)
 #define Tgetflag(x) 	tgetflag(x.tname)
 #endif
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-non-prototype"
+#endif
 extern  char    *getenv();
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 /*
  * The old code assumed termcap. termcap is almost always present, but on
@@ -628,9 +649,7 @@ static	int	li;
 static	int	co;
 
 #if !defined(__EMX__) && !defined(WINNT) && !defined(GUI)
-#ifndef HAVE_TERMINFO
 static	char	termcap[2048];	/* bigger than we need, just in case */
-#endif
 static	char	termcap2[2048];	/* bigger than we need, just in case */
 #endif
 
@@ -842,10 +861,10 @@ int term_init (char *term)
 		fprintf(stdout, "Using terminal type [%s]\n", term);
 #endif
 #ifdef HAVE_TERMINFO
-	setupterm(NULL, 1, &i);
-	if (i != 1)
+	if (tgetent(termcap, term) < 1)
 	{
-		fprintf(stderr, "setupterm failed: %d\n", i);
+		fprintf(stderr, "\n");
+		fprintf(stderr, "Your current TERM setting (%s) does not have a termcap entry.\n", term);
 		fprintf(stderr, "So we'll be running in dumb mode...\n");
 		return -1;
 	}
@@ -876,7 +895,7 @@ int term_init (char *term)
 		}
 		else
 		{
-			char *tmp = termcap2;
+			char *tmp __attribute__((unused)) = termcap2;
 
 			cval = Tgetstr(tcaps[i], tmp);
 			if (cval == (char *) -1)
@@ -1856,7 +1875,7 @@ static 	u_char	retval[256];
 	
 	*retval = 0;
 	if (!text)
-		return retval;
+		return (char *)retval;
 		
 	for (; *text && (pos < 254); text++, pos++)
 	{
@@ -1875,7 +1894,7 @@ static 	u_char	retval[256];
 	}
 
 	retval[pos] = 0;
-	return retval;
+	return (char *)retval;
 }
 
 char *	get_term_capability (char *name, int querytype, int mangle)
@@ -1910,7 +1929,7 @@ static	char		retval[128];
 			if (!(char **)t->ptr || !*(char **)t->ptr)
 				return NULL;
 			strcpy(retval, mangle ? 
-					control_mangle(*(char **)t->ptr) :
+					(char *)control_mangle(*(u_char **)t->ptr) :
 					(*(char **)t->ptr));
 			return retval;
 		}

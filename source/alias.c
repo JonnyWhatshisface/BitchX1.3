@@ -1396,7 +1396,7 @@ static void	delete_all_var_alias (char *name)
 {
 	Alias *item;
 	int i;
-	int count = 0;
+	int count __attribute__((unused)) = 0;
 	upper(name);
 	while ((item = (Alias *) remove_all_from_array((Array *)&var_alias, name)))
 	{
@@ -1784,7 +1784,7 @@ char **	glob_assign_alias (char *name, int *howmany)
 char **	pmatch_cmd_alias (char *name, int *howmany)
 {
 	int	cnt;
-	int 	len;
+	int 	len __attribute__((unused));
 	char 	**matches = NULL;
 	int 	matches_size = 5;
 
@@ -1820,7 +1820,7 @@ char **	pmatch_cmd_alias (char *name, int *howmany)
 char **	pmatch_assign_alias (char *name, int *howmany)
 {
 	int    	cnt;
-	int     len;
+	int     len __attribute__((unused));
 	char    **matches = NULL;
 	int     matches_size = 5;
 
@@ -2389,7 +2389,7 @@ void	do_stack_alias (int type, char *args, int which)
 	AliasStack	*aptr, **aptrptr;
 	Alias		*alptr;
 	int		cnt;
-	int 		my_which = 0;
+	int 		my_which __attribute__((unused)) = 0;
 	
 	if (which == STACK_DO_ALIAS)
 	{

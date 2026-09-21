@@ -11,6 +11,16 @@
  * in place and available. 
  */
 
+/*
+ * This translation unit intentionally contains CP437-encoded glyphs
+ * (ASCII-art logos, box-drawing and UI accents) which are converted to
+ * UTF-8 at display time. The source encoding is deliberately not UTF-8,
+ * so suppress clang's -Winvalid-source-encoding for this file.
+ */
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Winvalid-source-encoding"
+#endif
+
 #include "irc.h"
 static char cvsrevision[] = "$Id: dcc.c 104 2010-09-30 13:26:06Z keaston $";
 CVS_REVISION(dcc_c)
@@ -79,11 +89,11 @@ struct _dcc_types_
 	char	*name;
 	char	*module;
 	int	type;
-	int 	(*init_func)();
-	int	(*open_func)();
-	int	(*input)();
-	int	(*output)();
-	int	(*close_func)();
+	int 	(*init_func)(char *, char *, char *, char *, char *, char *, unsigned long, unsigned int);
+	int	(*open_func)(int, int, unsigned long, unsigned short);
+	int	(*input)(int, int, char *, int, int);
+	int	(*output)(int, int, char *, int);
+	int	(*close_func)(int, unsigned long, unsigned short);
 	
 } _dcc_types[] =
 {
@@ -417,7 +427,7 @@ char *othername = NULL;
 DCC_List *find_dcc_pending(char *nick, char *desc, char *othername, int type, int remove, int num)
 {
 unsigned long dcc_type;
-unsigned long flags;
+unsigned long flags __attribute__((unused));
 SocketList *s;
 DCC_int *n;
 DCC_List *new_i;
@@ -568,7 +578,7 @@ DCC_List		*new_i;
 		flags |= DCC_ACTIVE;
 		add_socketread(new_s, port, flags|type, nick, new_i->sock.func_read, NULL);
 		set_socketinfo(new_s, new);
-		if ((getpeername(new_s, (struct sockaddr *) &remaddr, &rl)) != -1)
+		if ((getpeername(new_s, (struct sockaddr *) &remaddr, (socklen_t *)&rl)) != -1)
 		{
 
 			flags &= ~DCC_OFFER;
@@ -730,13 +740,13 @@ DCC_List		*new_i;
 static void start_dcc_chat(int s)
 {
 struct	sockaddr_in	remaddr;
-int	sra;
+socklen_t	sra;
 int	type;
 int	new_s = -1;
 char	*nick = NULL;	
 unsigned long flags;
 DCC_int *n = NULL;
-SocketList *sa, *new_sa;
+SocketList *sa, *new_sa __attribute__((unused));
 void	(*func)(int) = process_dcc_chat;
 
 	sa = get_socket(s);
@@ -930,7 +940,7 @@ char		*bufptr;
 long		bytesread;
 char		*nick;
 int		type;
-SocketList *sl;
+SocketList *sl __attribute__((unused));
 
 	flags = get_socketflags(s);
 	nick =  get_socketserver(s);
@@ -1245,7 +1255,7 @@ UserList *ul = NULL;
 			reset_display_target();
 			return;
 		}
-		if ((s->flags && DCC_WAIT))
+		if ((s->flags & DCC_WAIT))
 		{
 			if (Ctype == DCC_CHAT)
 			{
@@ -1789,7 +1799,7 @@ char *buffer = alloca(MAX_DCC_BLOCK_SIZE+1);
 void start_dcc_send(int s)
 {
 struct	sockaddr_in	remaddr;
-int	sra;
+socklen_t	sra;
 int	type;
 int	new_s = -1;
 int	tdcc = 0;
@@ -2090,8 +2100,8 @@ void start_dcc_get(int snum)
 DCC_int *n;
 SocketList *s;
 int bytes_read;
-unsigned long type;
-int tdcc = 0;
+unsigned long type __attribute__((unused));
+int tdcc __attribute__((unused)) = 0;
 char buffer[MAX_DCC_BLOCK_SIZE+1];
 int err;
 	s = get_socket(snum);
@@ -2335,17 +2345,17 @@ static char *_dcc_offer[12] = {"%K-.........%n",		/*  0 */
 				"%K-=*%1%K=-. %R.-=%n",		/* 100 */
 				empty_string};
 #else
-static char *_dcc_offer[12] = {"%K±°°°°°°°°°%n",		/*  0 */
-				"%K±°°°°°°°°°%n",		/* 10 */
-				"%K±²°°°°°°°°%n",		/* 20 */
-				"%K±²Û°°°°°°°%n",		/* 30 */
-				"%K±²Û%1%K²%0%K°°°°°°%n",	/* 40 */
-				"%K±²Û%1%K²±%0%K°°°°°%n",	/* 50 */
-				"%K±²Û%1%K²±°%0%K°°°°%n",	/* 60 */
-				"%K±²Û%1%K²±°ÿ%0%K°°°%n",	/* 70 */
-				"%K±²Û%1%K²±°ÿ%R°%0%K°°%n",	/* 80 */
-				"%K±²Û%1%K²±°ÿ%R°±%0%K°%n",	/* 90 */
-				"%K±²Û%1%K²±°ÿ%R°±²%n",		/* 100 */
+static char *_dcc_offer[12] = {"%Kï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%n",		/*  0 */
+				"%Kï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%n",		/* 10 */
+				"%Kï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%n",		/* 20 */
+				"%Kï¿½ï¿½Û°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%n",		/* 30 */
+				"%Kï¿½ï¿½ï¿½%1%Kï¿½%0%Kï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%n",	/* 40 */
+				"%Kï¿½ï¿½ï¿½%1%Kï¿½ï¿½%0%Kï¿½ï¿½ï¿½ï¿½ï¿½%n",	/* 50 */
+				"%Kï¿½ï¿½ï¿½%1%Kï¿½ï¿½ï¿½%0%Kï¿½ï¿½ï¿½ï¿½%n",	/* 60 */
+				"%Kï¿½ï¿½ï¿½%1%Kï¿½ï¿½ï¿½ï¿½%0%Kï¿½ï¿½ï¿½%n",	/* 70 */
+				"%Kï¿½ï¿½ï¿½%1%Kï¿½ï¿½ï¿½ï¿½%Rï¿½%0%Kï¿½ï¿½%n",	/* 80 */
+				"%Kï¿½ï¿½ï¿½%1%Kï¿½ï¿½ï¿½ï¿½%Rï¿½ï¿½%0%Kï¿½%n",	/* 90 */
+				"%Kï¿½ï¿½ï¿½%1%Kï¿½ï¿½ï¿½ï¿½%Rï¿½ï¿½ï¿½%n",		/* 100 */
 				empty_string};
 #endif
 	if (percent <= 100)
@@ -2388,8 +2398,8 @@ char *filename, *p;
 		put_it("%s", convert_output_format("%G#  %W|%n %GT%gype  %W|%n %GN%gick      %W|%n %GP%gercent %GC%gomplete        %W|%n %GK%g/s   %W|%n %GF%gile", NULL, NULL));
 		put_it("%s", convert_output_format("%W------------------------------------------------------------------------------", NULL, NULL));
 #else
-		put_it("%s", convert_output_format("%G#  %W³%n %GT%gype  %W³%n %GN%gick      %W³%n %GP%gercent %GC%gomplete        %W³%n %GK%g/s   %W³%n %GF%gile", NULL, NULL));
-		put_it("%s", convert_output_format("%KÄÄ%nÄ%WÄ%nÄ%KÄÄÄÄÄ%nÄ%WÄ%nÄ%KÄÄÄÄÄÄÄÄÄ%nÄ%WÄ%nÄ%KÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ%nÄ%WÄ%nÄ%KÄÄÄÄÄ%nÄ%WÄ%nÄ%KÄÄÄÄÄ%nÄ%WÄ%nÄ%KÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ", NULL, NULL));
+		put_it("%s", convert_output_format("%G#  %Wï¿½%n %GT%gype  %Wï¿½%n %GN%gick      %Wï¿½%n %GP%gercent %GC%gomplete        %Wï¿½%n %GK%g/s   %Wï¿½%n %GF%gile", NULL, NULL));
+		put_it("%s", convert_output_format("%Kï¿½ï¿½%nï¿½%Wï¿½%nï¿½%Kï¿½ï¿½ï¿½ï¿½ï¿½%nï¿½%Wï¿½%nï¿½%Kï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%nï¿½%Wï¿½%nï¿½%Kï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%nï¿½%Wï¿½%nï¿½%Kï¿½ï¿½ï¿½ï¿½ï¿½%nï¿½%Wï¿½%nï¿½%Kï¿½ï¿½ï¿½ï¿½ï¿½%nï¿½%Wï¿½%nï¿½%Kï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½", NULL, NULL));
 #endif
 	}
 	for (c = pending_dcc; c; c = c->next, count++)	
@@ -2422,7 +2432,7 @@ char *filename, *p;
 			put_it("%s", convert_output_format(dformat, "%d %s %s %s %s %s %s", 
 				n->dccnum, 
 				local_type, 
-				n->encrypt ? "E" : "ÿ",
+				n->encrypt ? "E" : "ï¿½",
 				c->sock.server,
 			
 				s->flags & DCC_OFFER ?     "Offer " :
@@ -2477,7 +2487,7 @@ char *filename, *p;
 				put_it("%s", convert_output_format(c1format, "%d %s %s %s %s %s %s %s", 
 					n->dccnum, 
 					local_type, 
-					n->encrypt ? "E" : "ÿ",
+					n->encrypt ? "E" : "ï¿½",
 					s->server,
 					s->flags & DCC_OFFER ? "Offer" :
 					s->flags & DCC_WAIT ? "Wait" :
@@ -2501,7 +2511,7 @@ char *filename, *p;
 				put_it("%s", convert_output_format(dformat, "%d %s %s %s %s %s %s", 
 					n->dccnum, 
 					local_type, 
-					n->encrypt ? "E" : "ÿ",
+					n->encrypt ? "E" : "ï¿½",
 					s->server,
 					s->flags & DCC_OFFER ?     "Offer" :
 					s->flags & DCC_WAIT ?      "Wait" :
@@ -2565,7 +2575,7 @@ char *filename, *p;
 					s1 = dformat;
 
 				put_it("%s", convert_output_format(s1, "%d %s %s %s %s %s %s", 
-					n->dccnum, local_type, n->encrypt ? "E":"ÿ",
+					n->dccnum, local_type, n->encrypt ? "E":"ï¿½",
 					s->server, spec, kilobytes, 
 					strip_path(filename)));
 			}
@@ -2705,7 +2715,7 @@ register int		i = 0;
 	double		bytes;
 	SocketList	*s;
 	DCC_int		*n;
-	unsigned long	flags;
+unsigned long flags __attribute__((unused));
 	char		transfer_buffer[BIG_BUFFER_SIZE];
 	char		*c;
 			
@@ -2750,7 +2760,8 @@ register int		i = 0;
 /*		chop(transfer_buffer, 1);*/
 		if (fget_string_var(FORMAT_DCC_FSET))
 		{
-			sprintf(DCC_current_transfer_buffer, convert_output_format(fget_string_var(FORMAT_DCC_FSET), "%s", transfer_buffer));
+			char *fmt = convert_output_format(fget_string_var(FORMAT_DCC_FSET), "%s", transfer_buffer);
+			sprintf(DCC_current_transfer_buffer, "%s", fmt);
 			chop(DCC_current_transfer_buffer, 4);
 		}
 		else
@@ -2869,16 +2880,16 @@ char min_rate_out[20];
 
 #else
 
-		put_it("%s",convert_output_format("       %GÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ%K[%Cdcc transfer stats%K]%GÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸", NULL));
-		put_it("%s",convert_output_format("       %G³                                                                 ³", NULL));
-		put_it("%s",convert_output_format("       %G³%gÖÄ%K[%Cx%cferd %Ci%cn%K]%gÄÖ-%K[%Cx%cferd %Co%cut%K]%gÄ·Ä%K[%Ct%cotal %Cf%ciles%K]%gÄÖÄ%K[%Ca%cctive%K]%gÄ·Ä[%Cl%cimit%K]%gÄ·%G³", NULL));
-		put_it("%s",convert_output_format("       %G³%gº %W$[-10]0 %gº  %W$[-10]1 %gº    %W$[-10]2 %gº %W$[-8]3 %gº %W$[-7]4 %gº%G³", "%s %s %d %d %d", in, out,send_count_stat+get_count_stat,get_active_count(),get_int_var(DCC_SEND_LIMIT_VAR)));
-		put_it("%s",convert_output_format("       %G³%gÓÄÄÄÄÄÄÄÄÄÄÄÄ½ÄÄÄÄÄÄÄÄÄÄÄÄÄÓÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ½ÄÄÄÄÄÄÄÄÄÄÓÄÄÄÄÄÄÄÄÄ½%G³", NULL));
-		put_it("%s",convert_output_format("       %G³                                                                 ³", NULL));
-		put_it("%s",convert_output_format("       %gÖÄÄÄÄ%K[%Ci%cn %Cs%ctats%K]%gÄÄÄÖÄÄÄ%K[%Co%cut %Cs%ctats%K]%gÄÄÄ·ÄÄÄÄÄÄÄÄÄÄ%K[%Ct%coggles%K]%gÄÄÄÄÄÄÄÄÄÄ·", NULL));
-		put_it("%s",convert_output_format("       %gº %Cm%nax: %W$[-6]0%n%Rkb/s %gº %Cm%nax: %W$[-6]1%n%Rkb/s %gº   %Ca%nutoget: %W$[-3]2%n   %Cp%naths: %W$[-3]3 %gº", "%s %s %s %s", max_rate_in, max_rate_out, on_off(get_int_var(DCC_AUTOGET_VAR)),on_off(dcc_paths)));
-		put_it("%s",convert_output_format("       %gº %Cm%nin: %W$[-6]0%n%Rkb/s %gº %Cm%nin: %W$[-6]1%n%Rkb/s %gº %Co%nverwrite: %W$[-3]2%n   %Cq%nuiet: %W$[-3]3 %gº", "%s %s %s %s", min_rate_in, min_rate_out, on_off(dcc_overwrite_var), on_off(dcc_quiet)));
-		put_it("%s",convert_output_format("       %gÓÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ½ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÓÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ½", NULL));
+		put_it("%s",convert_output_format("       %Gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%K[%Cdcc transfer stats%K]%Gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¸", NULL));
+		put_it("%s",convert_output_format("       %Gï¿½                                                                 ï¿½", NULL));
+		put_it("%s",convert_output_format("       %Gï¿½%gï¿½ï¿½%K[%Cx%cferd %Ci%cn%K]%gï¿½ï¿½-%K[%Cx%cferd %Co%cut%K]%gÄ·ï¿½%K[%Ct%cotal %Cf%ciles%K]%gï¿½ï¿½ï¿½%K[%Ca%cctive%K]%gÄ·ï¿½[%Cl%cimit%K]%gÄ·%Gï¿½", NULL));
+		put_it("%s",convert_output_format("       %Gï¿½%gï¿½ %W$[-10]0 %gï¿½  %W$[-10]1 %gï¿½    %W$[-10]2 %gï¿½ %W$[-8]3 %gï¿½ %W$[-7]4 %gï¿½%Gï¿½", "%s %s %d %d %d", in, out,send_count_stat+get_count_stat,get_active_count(),get_int_var(DCC_SEND_LIMIT_VAR)));
+		put_it("%s",convert_output_format("       %Gï¿½%gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä½%Gï¿½", NULL));
+		put_it("%s",convert_output_format("       %Gï¿½                                                                 ï¿½", NULL));
+		put_it("%s",convert_output_format("       %gï¿½ï¿½ï¿½ï¿½ï¿½%K[%Ci%cn %Cs%ctats%K]%gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%K[%Co%cut %Cs%ctats%K]%gï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%K[%Ct%coggles%K]%gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä·", NULL));
+		put_it("%s",convert_output_format("       %gï¿½ %Cm%nax: %W$[-6]0%n%Rkb/s %gï¿½ %Cm%nax: %W$[-6]1%n%Rkb/s %gï¿½   %Ca%nutoget: %W$[-3]2%n   %Cp%naths: %W$[-3]3 %gï¿½", "%s %s %s %s", max_rate_in, max_rate_out, on_off(get_int_var(DCC_AUTOGET_VAR)),on_off(dcc_paths)));
+		put_it("%s",convert_output_format("       %gï¿½ %Cm%nin: %W$[-6]0%n%Rkb/s %gï¿½ %Cm%nin: %W$[-6]1%n%Rkb/s %gï¿½ %Co%nverwrite: %W$[-3]2%n   %Cq%nuiet: %W$[-3]3 %gï¿½", "%s %s %s %s", min_rate_in, min_rate_out, on_off(dcc_overwrite_var), on_off(dcc_quiet)));
+		put_it("%s",convert_output_format("       %gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä½", NULL));
 
 #endif
 
@@ -3035,23 +3046,16 @@ int dcc_exempt_save(FILE *fptr)
 {
 int count = 0;
 List *nptr = NULL;
-	if (dcc_no_flood)
-	{
-		fprintf(fptr, "# Dcc Exempt from autoget OFF list\n");
-		fprintf(fptr, "DCC EXEMPT ");
-	}
+	fprintf(fptr, "# Dcc Exempt from autoget OFF list\n");
+	fprintf(fptr, "DCC EXEMPT ");
 	for (nptr = next_namelist(dcc_no_flood, NULL, DCC_HASHSIZE); nptr; nptr = next_namelist(dcc_no_flood, nptr, DCC_HASHSIZE))
 	{
 		fprintf(fptr, "+%s ", nptr->name);
 		count++;
 	}
-	if (dcc_no_flood)
-	{
-		fprintf(fptr, "\n");
-		if (count && do_hook(SAVEFILE_LIST, "DCCexempt %d", count))
-			bitchsay("Saved %d DccExempt entries", count);
-		                        
-	}
+	fprintf(fptr, "\n");
+	if (count && do_hook(SAVEFILE_LIST, "DCCexempt %d", count))
+		bitchsay("Saved %d DccExempt entries", count);
 	return count;
 }
 
@@ -3063,7 +3067,7 @@ List *nptr = NULL;
  */
 static	void 	output_reject_ctcp (UserhostItem *stuff, char *nick, char *args)
 {
-	char	*nickname_requested;
+	char	*nickname_requested __attribute__((unused));
 	char	*nickname_recieved;
 	char	*type;
 	char	*description;
@@ -3656,7 +3660,7 @@ DCC_dllcommands *dcc_comm = NULL;
 
 void read_ftp_file(int snum)
 {
-int len = 0;
+socklen_t	len = 0;
 char *buf;
 SocketList *s;
 DCC_int *n;
@@ -3691,13 +3695,21 @@ int err;
 
 int open_listen_port(int s)
 {
-struct sockaddr_in data_addr = { 0 };
-int len = sizeof(struct sockaddr_in), data = -1;
-int on = 1;
-char *a, *p;
+	struct sockaddr_in data_addr = { 0 };
+	socklen_t len = sizeof(struct sockaddr_in);
+	int data = -1;
+	int on = 1;
+	char *a, *p;
 
-	if (getsockname(s, (struct sockaddr *)&data_addr, &len) < 0)
-		return -1;
+	{
+		socklen_t len_t = len;
+		if (getsockname(s, (struct sockaddr *)&data_addr, &len_t) < 0)
+		{
+			len = len_t;
+			return -1;
+		}
+		len = len_t;
+	}
 
 	data_addr.sin_port = 0;
 	if ((data = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -3706,8 +3718,11 @@ char *a, *p;
 		return -1;
 	if ((bind(data, (struct sockaddr *)&data_addr, sizeof(data_addr))) < 0)
 		return -1;
-	len = sizeof(struct sockaddr_in);
-	getsockname(data, (struct sockaddr *)&data_addr, &len);
+	{
+		socklen_t len_t = len;
+		getsockname(data, (struct sockaddr *)&data_addr, &len_t);
+		len = len_t;
+	}
 
 	a = (char *)&data_addr.sin_addr;
 	p = (char *)&data_addr.sin_port;
@@ -3784,8 +3799,8 @@ int i = 0;
 	if (s->flags & DCC_WAIT)
 	{
 		struct	sockaddr_in	remaddr;
-		int			rl = sizeof(remaddr);
-                                
+		socklen_t			rl = sizeof(remaddr);
+				 
 		/* maybe we should login here. */
 		if (getpeername(snum, (struct sockaddr *) &remaddr, &rl) != -1)
 		{
@@ -3829,10 +3844,10 @@ int i = 0;
 
 void open_ftpget(SocketList *s, char *args)
 {
-SocketList *sock;
+SocketList *sock __attribute__((unused));
 DCC_int *new;
 struct sockaddr_in data_addr = { 0 };
-int len = sizeof(struct sockaddr_in);
+	socklen_t len = sizeof(struct sockaddr_in);
 char tmp[BIG_BUFFER_SIZE+1];
 int data = -1, s1 = -1;
 char *p, *bufptr;
@@ -3931,7 +3946,7 @@ SocketList *s;
 				int sock, s1;
 				DCC_int *new;
 				struct sockaddr_in data_addr = { 0 };
-				int len = sizeof(struct sockaddr_in);
+				socklen_t len = sizeof(struct sockaddr_in);
 				char tmp[BIG_BUFFER_SIZE+1], *bufptr;
 				if ((sock = open_listen_port(s->is_read)) == -1)
 					return -1;

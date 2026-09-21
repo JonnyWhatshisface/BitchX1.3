@@ -944,7 +944,7 @@ static BuiltInFunctions new;
 
 char **get_builtins(char *name, int *cnt)
 {
-char *last_match = NULL;
+char *last_match __attribute__((unused)) = NULL;
 int matches_size = 5;
 int i = 0;
 int len;
@@ -1700,7 +1700,7 @@ char *function_decode(char *n, unsigned char * input)
 	}
 	result[i] = '\0';
 
-	return result;		/* DONT USE RETURN_STR HERE! */
+	return (char *)result;		/* DONT USE RETURN_STR HERE! */
 }
 
 
@@ -2640,7 +2640,7 @@ BUILT_IN_FUNCTION(function_channelnicks, word)
 	ChannelList     *chan = NULL; /* XXX */
 	NickList        *tmp = NULL;
 	char		*nicks = NULL;
-	int		sort_type = NICKSORT_NORMAL;
+	int		sort_type __attribute__((unused)) = NICKSORT_NORMAL;
 	
 	channel = next_arg(word, &word);
 	if ((chan = lookup_channel(channel, from_server, 0)))
@@ -3393,7 +3393,7 @@ BUILT_IN_FUNCTION(function_split, word)
 BUILT_IN_FUNCTION(function_chr, word)
 {
 	char aboo[BIG_BUFFER_SIZE];
-	unsigned char *ack = aboo;
+	char *ack = aboo;
 	char *blah;
 
 	while ((blah = next_arg(word, &word)))
@@ -3406,7 +3406,7 @@ BUILT_IN_FUNCTION(function_chr, word)
 BUILT_IN_FUNCTION(function_ascii, word)
 {
 	char *aboo = NULL;
-	unsigned char *w = word;
+	char *w = word;
 	if (!word || !*word)
 		RETURN_EMPTY;
 
@@ -3898,7 +3898,7 @@ BUILT_IN_FUNCTION(function_utime, input)
 BUILT_IN_FUNCTION(function_stripansi, input)
 {
 	register unsigned char	*cp;
-	for (cp = input; *cp; cp++)
+	for (cp = (unsigned char *)input; *cp; cp++)
 		if (*cp < 31 && *cp > 13)
 			if (*cp != 15 && *cp !=22)
 				*cp = (*cp & 127) | 64;
@@ -3917,7 +3917,7 @@ BUILT_IN_FUNCTION(function_stripc, input)
 {
 	char	*retval;
 	retval = LOCAL_COPY(input);
-	strcpy_nocolorcodes(retval, input);
+	strcpy_nocolorcodes((unsigned char *)retval, (const unsigned char *)input);
 	RETURN_STR(retval);
 }
 
@@ -5063,7 +5063,7 @@ int socket_num = -1;
 int len = -1;
 	GET_INT_ARG(socket_num, word);
 	if ((socket_num > 0) && check_socket(socket_num))
-		len = write_sockets(socket_num, word, strlen(word), 1);
+		len = write_sockets(socket_num, (unsigned char *)word, strlen(word), 1);
 	RETURN_INT(len);
 #endif
 }
@@ -5314,7 +5314,7 @@ BUILT_IN_FUNCTION(function_findw, input)
 
 BUILT_IN_FUNCTION(function_countansi, input)
 {
-	RETURN_INT(output_with_count(input, 0, 0));		
+	RETURN_INT(output_with_count((const unsigned char *)input, 0, 0));		
 }
 
 BUILT_IN_FUNCTION(function_iplong, word)
@@ -5766,7 +5766,7 @@ BUILT_IN_FUNCTION(function_leftpc, word)
 	if (count <= 0 || !*word)
 		RETURN_EMPTY;
 
-	prepared = prepare_display(word, count, &lines, PREPARE_NOWRAP);
+	prepared = prepare_display((const unsigned char *)word, count, &lines, PREPARE_NOWRAP);
 	RETURN_STR((char *)prepared[0]);
 }
 /*
@@ -6356,7 +6356,7 @@ char *s = NULL;
 			cols = current_window->screen->co;
 		else
 			cols = current_window->columns;
-		for (lines = split_up_line(s, cols + 1); *lines; lines++)
+		for (lines = split_up_line((const unsigned char *)s, cols + 1); *lines; lines++)
 			count++;
 	}
 	RETURN_INT(count);
@@ -6567,7 +6567,7 @@ char *ret = NULL;
 			m_s3cat(&ret, ",", new->name);
 			m_s3cat(&ret, space, new->key ? new->key : "<none>");
 		}
-		if ((count == ajl_num))
+		if (count == ajl_num)
 			break;
 		count++;
 	}

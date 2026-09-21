@@ -1,3 +1,13 @@
+/*
+ * This translation unit intentionally contains CP437-encoded glyphs
+ * (ASCII-art logos, box-drawing and UI accents) which are converted to
+ * UTF-8 at display time. The source encoding is deliberately not UTF-8,
+ * so suppress clang's -Winvalid-source-encoding for this file.
+ */
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Winvalid-source-encoding"
+#endif
+
 #include "irc.h"
 static char cvsrevision[] = "$Id: fset.c 144 2011-10-13 12:45:27Z keaston $";
 CVS_REVISION(fset_c)

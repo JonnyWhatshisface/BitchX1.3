@@ -15,6 +15,16 @@
 
 #define CDCC_FLUD
 
+/*
+ * This translation unit intentionally contains CP437-encoded glyphs
+ * (ASCII-art logos, box-drawing and UI accents) which are converted to
+ * UTF-8 at display time. The source encoding is deliberately not UTF-8,
+ * so suppress clang's -Winvalid-source-encoding for this file.
+ */
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Winvalid-source-encoding"
+#endif
+
 #include "irc.h"
 static char cvsrevision[] = "$Id: cdcc.c 3 2008-02-25 09:49:14Z keaston $";
 CVS_REVISION(cdcc_c)
@@ -395,7 +405,7 @@ static int do_local_send(char *command, char *args, char *rest)
 	pack *ptr = NULL;
 	char *temp = NULL, *file = NULL, *dccinfo = NULL, *q = NULL, *p;
 	int maxdcc, maxqueue;
-	int tdcc = 0;
+	int tdcc __attribute__((unused)) = 0;
 	int queued_files =  0;
 	int count = 0;
 				
@@ -654,7 +664,7 @@ static int r_list(char *from, char *args)
 	char bytes_out[30];
 	char bytes_in[30];
 	char speed_out[30];
-	char *type_msg;
+	char *type_msg __attribute__((unused));
 	int once = 0;
 
 	sprintf(mrate_out, "%1.3g", dcc_max_rate_out);
@@ -853,7 +863,7 @@ int l_plist(char *args, char *rest)
 	char bytes_out[30];
 	char bytes_in[30];
 	char speed_out[30];
-	char *type_msg;
+	char *type_msg __attribute__((unused));
 	int maxdccs, blocksize, maxqueue;
 	
 	if (!get_current_channel_by_refnum(0) || !cdcc_numpacks || (args && *args && !is_channel(args))) {
@@ -1808,17 +1818,17 @@ static int l_stats(char *args, char *rest)
 {
 	char cdcc_minspeed_s[80];
 	sprintf(cdcc_minspeed_s, "%1.3f", cdcc_minspeed);
-	put_it("%s",convert_output_format("       %GÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ%K[%C    cdcc stat     %K]%GÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸", NULL));
-	put_it("%s",convert_output_format("       %G³                                                                 ³", NULL));
-	put_it("%s",convert_output_format("       %G³%gÖÄ%K[%Cp%ctimer  %K]%gÄÖ-%K[%Ct%cype     %K]%gÄ·Ä%K[%Ct%cotal %Cp%cacks%K]%gÄÖÄ%K[%Cs%cent  %K]%gÄ·Ä[%Cq%cueue%K]%gÄ·%G³", NULL));
-	put_it("%s",convert_output_format("       %G³%gº %W$[-10]0 %gº  %W$[-10]1 %gº    %W$[-10]2 %gº %W$[-8]3 %gº %W$[-7]4 %gº%G³", "%d %s %d %d %d", ptimer, do_notice_list ?"notice":"privmsg", cdcc_numpacks, send_numpacks, numqueue));
-	put_it("%s",convert_output_format("       %G³%gÓÄÄÄÄÄÄÄÄÄÄÄÄ½ÄÄÄÄÄÄÄÄÄÄÄÄÄÓÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ½ÄÄÄÄÄÄÄÄÄÄÓÄÄÄÄÄÄÄÄÄ½%G³", NULL));
-	put_it("%s",convert_output_format("       %G³ CDCC channel                                                    ³", NULL));
-	put_it("%s",convert_output_format("       %G³ %W$[63]0-%G ³", "%s", !public_channel ? "current channel": public_channel));
-	put_it("%s",convert_output_format("       %gÖÄÄÄÄ%K[%C %c  %C %c    %K]%gÄÄÄÖÄÄÄ%K[%C %c   %C %c    %K]%gÄÄÄ·ÄÄÄÄÄÄÄÄÄÄ%K[%Ct%coggles%K]%gÄÄÄÄÄÄÄÄÄÄ·", NULL));
-	put_it("%s",convert_output_format("       %gº %C %n    %W$[-6]0%n%R     %gº %C %n    %W$[-6]1%n%R     %gº   %Ct%nimer:   %W$[-3]2%n   %Ce%ncho:  %W$[-3]3 %gº", "1 1 %s %s", on_off(ptimer), on_off(do_cdcc_echo)));
-	put_it("%s",convert_output_format("       %gº %C %n    %W$[-6]0%n%R     %gº %C %n    %W$[-6]1%n%R     %gº %Cm%ninspeed:  %W$[-3]2%n   %Cs%necure:%W$[-3]3 %gº", "1 1 %s %s", cdcc_minspeed == 0.0 ? "off":cdcc_minspeed_s, on_off(get_string_var(CDCC_SECURITY_VAR) ? 1 : 0)));
-	put_it("%s",convert_output_format("       %gÓÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ½ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÓÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ½", NULL));
+	put_it("%s",convert_output_format("       %Gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%K[%C    cdcc stat     %K]%Gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¸", NULL));
+	put_it("%s",convert_output_format("       %Gï¿½                                                                 ï¿½", NULL));
+	put_it("%s",convert_output_format("       %Gï¿½%gï¿½ï¿½%K[%Cp%ctimer  %K]%gï¿½ï¿½-%K[%Ct%cype     %K]%gÄ·ï¿½%K[%Ct%cotal %Cp%cacks%K]%gï¿½ï¿½ï¿½%K[%Cs%cent  %K]%gÄ·ï¿½[%Cq%cueue%K]%gÄ·%Gï¿½", NULL));
+	put_it("%s",convert_output_format("       %Gï¿½%gï¿½ %W$[-10]0 %gï¿½  %W$[-10]1 %gï¿½    %W$[-10]2 %gï¿½ %W$[-8]3 %gï¿½ %W$[-7]4 %gï¿½%Gï¿½", "%d %s %d %d %d", ptimer, do_notice_list ?"notice":"privmsg", cdcc_numpacks, send_numpacks, numqueue));
+	put_it("%s",convert_output_format("       %Gï¿½%gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä½%Gï¿½", NULL));
+	put_it("%s",convert_output_format("       %Gï¿½ CDCC channel                                                    ï¿½", NULL));
+	put_it("%s",convert_output_format("       %Gï¿½ %W$[63]0-%G ï¿½", "%s", !public_channel ? "current channel": public_channel));
+	put_it("%s",convert_output_format("       %gï¿½ï¿½ï¿½ï¿½ï¿½%K[%C %c  %C %c    %K]%gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%K[%C %c   %C %c    %K]%gï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%K[%Ct%coggles%K]%gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä·", NULL));
+	put_it("%s",convert_output_format("       %gï¿½ %C %n    %W$[-6]0%n%R     %gï¿½ %C %n    %W$[-6]1%n%R     %gï¿½   %Ct%nimer:   %W$[-3]2%n   %Ce%ncho:  %W$[-3]3 %gï¿½", "1 1 %s %s", on_off(ptimer), on_off(do_cdcc_echo)));
+	put_it("%s",convert_output_format("       %gï¿½ %C %n    %W$[-6]0%n%R     %gï¿½ %C %n    %W$[-6]1%n%R     %gï¿½ %Cm%ninspeed:  %W$[-3]2%n   %Cs%necure:%W$[-3]3 %gï¿½", "1 1 %s %s", cdcc_minspeed == 0.0 ? "off":cdcc_minspeed_s, on_off(get_string_var(CDCC_SECURITY_VAR) ? 1 : 0)));
+	put_it("%s",convert_output_format("       %gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä½", NULL));
 	return 0;
 }
 

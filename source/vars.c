@@ -10,6 +10,16 @@
  */
 
 
+/*
+ * This translation unit intentionally contains CP437-encoded glyphs
+ * (ASCII-art logos, box-drawing and UI accents) which are converted to
+ * UTF-8 at display time. The source encoding is deliberately not UTF-8,
+ * so suppress clang's -Winvalid-source-encoding for this file.
+ */
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Winvalid-source-encoding"
+#endif
+
 #include "irc.h"
 static char cvsrevision[] = "$Id: vars.c 160 2012-03-06 11:14:51Z keaston $";
 CVS_REVISION(vars_c)
@@ -934,7 +944,7 @@ void set_var_value(int var_index, char *value, IrcVariableDll *dll)
 					else
 						say("SET: no such user");
 				}
-				if ((!var->int_flags & VIF_CHANGED))
+				if (((!var->int_flags) & VIF_CHANGED))
 				{
 					if ((var->string && ! value) ||
 					    (! var->string && value) ||
@@ -1018,7 +1028,7 @@ void do_stack_set(int type, char *args)
 				aptr->set->string = m_strdup(irc_variable[var_index].string);
 			aptr->var_index = var_index;
 		}
-		else if ((cnt == 0))
+		else if (cnt == 0)
 			say("No such Set [%s]", args);
 		else
 			say("Set is ambiguous %s", args);
@@ -1053,7 +1063,7 @@ void do_stack_set(int type, char *args)
 	}
 	if (STACK_LIST == type)
 	{
-		AliasStack1 *prev = NULL;
+		AliasStack1 *prev __attribute__((unused)) = NULL;
 		for (aptr = *aptrptr; aptr; prev = aptr, aptr = aptr->next)
 		{
 			switch(aptr->set->type)

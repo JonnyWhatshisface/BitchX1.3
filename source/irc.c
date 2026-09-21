@@ -11,6 +11,10 @@
 #include "irc.h"
 #include "struct.h"
 
+#ifndef IRCLIB
+#define IRCLIB "/usr/local/lib/bx"
+#endif
+
 static char cvsrevision[] = "$Id: irc.c 206 2012-06-13 12:34:32Z keaston $";
 CVS_REVISION(irc_c)
 
@@ -314,6 +318,7 @@ munge_term_env_var(void)
   /*
    * Add more if's here, if needed.
    */
+  return 0;
 }
 
 void
@@ -440,7 +445,7 @@ SIGNAL_HANDLER(nothing)
                            
 SIGNAL_HANDLER(sigpipe)
 {
-static int sigpipe_hit = 0;
+static int sigpipe_hit __attribute__((unused)) = 0;
 	sigpipe_hit++;
 	
 }
@@ -482,9 +487,9 @@ void BX_irc_exit (int really_quit, char *reason, char *format, ...)
 	}
 	do_hook(EXIT_LIST, "%s", reason ? reason : buffer);
 
-	close_all_servers(reason ? reason : buffer);
+	close_all_servers(reason != NULL && reason[0] != '\0' ? reason : buffer[0] != '\0' ? buffer : reason != NULL && reason[0] != '\0' ? reason : empty_string);
 
-	put_it("%s", buffer ? buffer : reason ? reason : empty_string);
+	put_it("%s", buffer[0] != '\0' ? buffer : reason != NULL && reason[0] != '\0' ? reason : empty_string);
 
 
 	clean_up_processes();
@@ -1188,7 +1193,7 @@ static	char	*parse_args (char *argv[], int argc, char **envp)
 #endif
 	}
 
-	if (!nickname || !*nickname)
+	if (nickname[0] == '\0')
 		strmcpy(nickname, username, NICKNAME_LEN);
 
 	if (!check_nickname(nickname))
@@ -1251,7 +1256,7 @@ extern void set_screens (fd_set *, fd_set *);
 
 void BX_io (const char *what)
 {
-	static	int	first_time = 1,	
+	static	int	first_time __attribute__((unused)) = 1,	
 			level = 0;
 		long	clock_timeout = 0, 
 			timer_timeout = 0,

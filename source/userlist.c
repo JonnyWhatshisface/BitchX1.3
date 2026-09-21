@@ -903,7 +903,7 @@ int real_check_auto (void *arg, char *sub)
 	char *p = (char *)arg;
 	char *args = (char *)arg;
 	char *serv_num = NULL;
-	int  this_server = from_server;	
+	int  this_server __attribute__((unused)) = from_server;	
 
 	
 	
@@ -1443,7 +1443,7 @@ char err_msg[7][50] = { empty_string, "No Level Specified", "No Protection level
 
 int check_channel_match(char *tmp, char *channel)
 {
-	char *p, *q, *chan = NULL;
+	char *p, *q __attribute__((unused)), *chan = NULL;
 	int wmatch = 0;
 	if (!tmp || !channel)
 		return 0;
