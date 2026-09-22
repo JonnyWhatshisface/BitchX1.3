@@ -117,6 +117,7 @@ long 	BX_my_atol			(const char *);
 char *	s_next_arg		(char **);
 char *	BX_next_in_comma_list	(char *, char **);
 void	BX_strip_control		(const char *, char *);
+char *	BX_strip_control_malloc		(const char *);
 int	BX_figure_out_address	(char *, char **, char **, char **, char **, int *);
 int	count_char		(const unsigned char *, const unsigned char);
 char *	BX_strnrchr		(char *, char, int);
@@ -161,6 +162,7 @@ int			BX_set_blocking (int);
 int			BX_set_non_blocking (int);
 int			my_accept (int, struct sockaddr *, socklen_t *);
 int			lame_resolv (const char *, struct sockaddr_foobar *);
+int			resolve_hostname (const char *, struct sockaddr_foobar *);
 
 #define my_isspace(x) \
 	((x) == 9 || (x) == 10 || (x) == 11 || (x) == 12 || (x) == 13 || (x) == 32)

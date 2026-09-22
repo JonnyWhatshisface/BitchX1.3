@@ -1150,6 +1150,19 @@ int i;
 void process_dcc_send1(int s);
 void start_dcc_get(int s);
 
+static int validate_dcc_filename(const char *filename)
+{
+	if (!filename || !*filename)
+		return 0;
+	if (strstr(filename, "..") != NULL)
+		return 0;
+	if (strchr(filename, '/') != NULL || strchr(filename, '\\') != NULL)
+		return 0;
+	if (strchr(filename, '\007') != NULL || strchr(filename, '\010') != NULL)
+		return 0;
+	return 1;
+}
+
 void register_dcc_type(char *nick, char *type, char *description, char *address, char *port, char *size, char *extra, char *uhost, void (*func1)(int))
 {
 int Ctype;
@@ -1178,6 +1191,12 @@ UserList *ul = NULL;
 			description = c + 1;
 		if (description && *description == '.')
 			*description = '_';
+		if (!validate_dcc_filename(description))
+		{
+			put_it("%s", convert_output_format("$G %RDCC%n Invalid filename rejected: $0", "%s", description));
+			reset_display_target();
+			return;
+		}
 	}
 	if (size && *size)
 		filesize = atol(size);
@@ -3897,6 +3916,12 @@ char *filename = NULL;
 	else
 		filename = args;
 
+	if (!validate_dcc_filename(filename))
+	{
+		put_it("%s", convert_output_format("$G %gFTP%n Invalid filename rejected: $0", "%s", filename));
+		goto error_ftp;
+	}
+
 	add_socketread(s1, 0,  DCC_FTPGET|DCC_ACTIVE, s->server, read_ftp_file, NULL);
 	sock = get_socket(s1);
 	new = new_malloc(sizeof(DCC_int));
@@ -4359,18 +4384,18 @@ char	*dcc_raw_connect(char *host, u_short port)
 	DCC_list	*Client;
 	char	*PortName;
 	struct	in_addr	address;
-	struct	hostent	*hp;
 
 	set_display_target(NULL, LOG_DCC);
 	if ((address.s_addr = inet_addr(host)) == (unsigned) -1)
 	{
-		if (!(hp = gethostbyname(host)))
+		struct sockaddr_foobar sf;
+		if (resolve_hostname(host, &sf) < 0)
 		{
 			say("Unknown host: %s", host);
 			set_display_target(NULL, LOG_CURRENT);
 			return m_strdup(empty_string);
 		}
-		memmove(&address, hp->h_addr, sizeof(address));
+		memmove(&address, &sf.sf_addr, sizeof(address));
 	}
 	Client = dcc_searchlist(host, ltoa(port), DCC_RAW, 1, NULL, -1);
 	if (Client->flags & DCC_ACTIVE)

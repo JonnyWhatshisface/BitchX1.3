@@ -367,11 +367,19 @@ ChannelList *tmp;
 						send_to_server("TOPIC %s :%s", tmp->channel, tmp->topic);
 				}
 			} else 
-				malloc_strcpy(&tmp->topic, ArgList[1]);
-		} else
-			malloc_strcpy(&tmp->topic, ArgList[1]);
-		add_last_type(&last_topic[0], 1, from, FromUserHost, tmp->channel, ArgList[1]);
-		do_logchannel(LOG_TOPIC, tmp, "%s %s %s", from, ArgList[0], ArgList[1] ? ArgList[1] : empty_string);
+			{
+				char *sanitized_topic = BX_strip_control_malloc(ArgList[1]);
+				malloc_strcpy(&tmp->topic, sanitized_topic);
+				new_free(&sanitized_topic);
+			}
+		} else 
+		{
+			char *sanitized_topic = BX_strip_control_malloc(ArgList[1]);
+			malloc_strcpy(&tmp->topic, sanitized_topic);
+			new_free(&sanitized_topic);
+		}
+	add_last_type(&last_topic[0], 1, from, FromUserHost, tmp->channel, ArgList[1]);
+	do_logchannel(LOG_TOPIC, tmp, "%s %s %s", from, ArgList[0], ArgList[1] ? ArgList[1] : empty_string);
 	}
 	if (tmp && check_ignore(from, FromUserHost, tmp->channel, IGNORE_TOPICS, NULL) != IGNORED)
 	{

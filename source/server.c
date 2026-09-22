@@ -72,6 +72,81 @@ static int is_standard_tls_port(int port)
 {
 	return (port == 6697 || port == 6696 || port == 6698 || port == 6699 || port == 7000);
 }
+
+static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
+{
+	char buf[256];
+	X509 *err_cert = X509_STORE_CTX_get_current_cert(ctx);
+	int err = X509_STORE_CTX_get_error(ctx);
+
+	if (!preverify_ok)
+	{
+		say("SSL certificate verification failed: %s",
+		    X509_verify_cert_error_string(err));
+	}
+
+	if (X509_NAME_get_text_by_NID(X509_get_subject_name(err_cert), NID_commonName, buf, sizeof(buf)) > 0)
+		say("SSL cert: CN=%s", buf);
+	else
+		say("SSL cert: (no CN)");
+
+	return preverify_ok;
+}
+
+static int ssl_verify_hostname(SSL *ssl, const char *hostname)
+{
+	X509 *cert;
+	STACK_OF(GENERAL_NAME) *sanames;
+	int i, found = 0;
+	char cn[256];
+
+	cert = SSL_get_peer_certificate(ssl);
+	if (!cert)
+	{
+		say("SSL: No peer certificate");
+		return 0;
+	}
+
+	if (X509_NAME_get_text_by_NID(X509_get_subject_name(cert), NID_commonName, cn, sizeof(cn)) > 0)
+		say("SSL server cert subject: CN=%s", cn);
+	else
+		say("SSL server cert subject: (no CN)");
+
+	sanames = (STACK_OF(GENERAL_NAME) *)X509_get_ext_d2i(cert, NID_subject_alt_name, NULL, NULL);
+	if (sanames)
+	{
+		for (i = 0; i < sk_GENERAL_NAME_num(sanames); i++)
+		{
+			const GENERAL_NAME *gen = sk_GENERAL_NAME_value(sanames, i);
+			if (gen->type == GEN_DNS)
+			{
+				ASN1_STRING *asn_str = gen->d.dNSName;
+				char *dns_name = (char *)ASN1_STRING_get0_data(asn_str);
+				if (dns_name && strcasecmp(hostname, dns_name) == 0)
+				{
+					found = 1;
+					break;
+				}
+			}
+		}
+		sk_GENERAL_NAME_pop_free(sanames, GENERAL_NAME_free);
+	}
+
+	if (!found)
+	{
+		X509_NAME *subj = X509_get_subject_name(cert);
+		char name[256];
+		if (subj && X509_NAME_get_text_by_NID(subj, NID_commonName, name, sizeof(name)) > 0)
+		{
+			say("SSL: Checking CN: %s against %s", name, hostname);
+			if (strcasecmp(name, hostname) == 0)
+				found = 1;
+		}
+	}
+
+	X509_free(cert);
+	return found;
+}
 #endif
 
 const	char *  umodes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -489,7 +564,7 @@ static	time_t	last_timeout = 0;
 		if (((des = server_list[i].write) > -1) && FD_ISSET(des, wr) && !(server_list[i].login_flags & LOGGED_IN))
 		{
 			struct sockaddr_in sa;
-			int salen = sizeof(struct sockaddr_in);
+			socklen_t salen = sizeof(struct sockaddr_in);
 
 			if (getpeername(des, (struct sockaddr *) &sa, &salen) != -1)
 			{
@@ -1381,7 +1456,7 @@ int finalize_server_connect(int refnum, int c_server, int my_from_server)
 			CHK_NULL(server_list[refnum].ctx);
 			BX_SSL_SET_MIN_PROTO(server_list[refnum].ctx, TLS1_2_VERSION);
 			SSL_CTX_set_default_verify_paths(server_list[refnum].ctx);
-			SSL_CTX_set_verify(server_list[refnum].ctx, SSL_VERIFY_PEER, NULL);
+			SSL_CTX_set_verify(server_list[refnum].ctx, SSL_VERIFY_PEER, ssl_verify_callback);
 			server_list[refnum].ssl_fd = SSL_new (server_list[refnum].ctx);
 			CHK_NULL(server_list[refnum].ssl_fd);
 			SSL_set_fd (server_list[refnum].ssl_fd, server_list[refnum].read);
@@ -1396,6 +1471,21 @@ int finalize_server_connect(int refnum, int c_server, int my_from_server)
 		}
 		SSL_show_errors();
 		CHK_SSL(err);
+
+		if (SSL_get_verify_result(server_list[refnum].ssl_fd) != X509_V_OK)
+		{
+			say("SSL: Certificate verification failed");
+			close_server(refnum, "SSL certificate verification failed");
+			return -2;
+		}
+
+		if (!ssl_verify_hostname(server_list[refnum].ssl_fd, get_server_name(refnum)))
+		{
+			say("SSL: Hostname verification failed");
+			close_server(refnum, "SSL hostname verification failed");
+			return -2;
+		}
+
 		say("SSL server connected");
 	}
 #endif

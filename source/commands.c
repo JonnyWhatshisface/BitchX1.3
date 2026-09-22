@@ -2720,7 +2720,6 @@ void add_address(Virtuals **vhost_list, int norev, struct sockaddr *sa)
     char addr[128];
     socklen_t slen = 0;
 #else
-    struct hostent *host;
 #endif /* IPV6 */
 
 #ifdef IPV6
@@ -2781,10 +2780,10 @@ void add_address(Virtuals **vhost_list, int norev, struct sockaddr *sa)
 	    vhost->hostname = m_strdup(result);
     }
 #else
-    if (!norev && (host = gethostbyaddr(&sin->sin_addr, sizeof(sin->sin_addr),
-        AF_INET)))
+    char addr[128];
+    if (!norev && !getnameinfo((struct sockaddr *) sin, sizeof(struct sockaddr_in), addr, sizeof addr, NULL, 0, NI_NAMEREQD))
     {
-        vhost->hostname = m_strdup(host->h_name);
+        vhost->hostname = m_strdup(addr);
     }
     else
     {
@@ -2993,19 +2992,18 @@ BUILT_IN_COMMAND(e_hostname)
     if (newhost)
 	{
 		int reconn = 0;
-#ifndef IPV6
-	    struct hostent *hp;
-#endif
 
         /* Reconnect if hostname has changed */
 		if (LocalHostName && strcmp(LocalHostName, newhost))
 			reconn = 1;
 
         malloc_strcpy(&LocalHostName, newhost);
-#ifndef IPV6
-        if ((hp = gethostbyname(LocalHostName)))
-            memcpy((void *)&LocalHostAddr.sf_addr, hp->h_addr, sizeof(struct in_addr));
-#endif
+        {
+			struct sockaddr_foobar sf;
+			memset(&LocalHostAddr, 0, sizeof(LocalHostAddr));
+			if (resolve_hostname(LocalHostName, &sf) >= 0)
+				memcpy((void *)&LocalHostAddr.sf_addr, &sf.sf_addr, sizeof(struct in_addr));
+        }
 
         bitchsay("Local host name is now [%s]", LocalHostName);
         new_free(&newhost);

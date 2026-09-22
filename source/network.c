@@ -310,15 +310,15 @@ int red;
 int handle_socks(int fd, struct sockaddr_in addr, char *host, int portnum)
 {
 	struct sockaddr_in proxy;
-	struct hostent *hp;
-                
+	struct sockaddr_foobar sf;
+	
 	memset(&proxy, 0, sizeof(proxy));
-	if (!(hp = gethostbyname(host)))
+	if (resolve_hostname(host, &sf) < 0)
 	{
 		bitchsay("Unable to resolve SOCKS proxy host address: %s", host);
 		return -1;
 	}
-	bcopy(hp->h_addr, (char *)&proxy.sin_addr, hp->h_length);
+	memcpy(&proxy.sin_addr, &sf.sf_addr, sizeof(struct in_addr));
 	proxy.sin_family = AF_INET;
 	proxy.sin_port = htons(portnum);
 	alarm(get_int_var(CONNECT_TIMEOUT_VAR));
@@ -500,7 +500,6 @@ int BX_connect_by_number(char *hostn, unsigned short *portnum, int service, int 
 	{
 		struct sockaddr_foobar server;
 		int server_len;
-		struct hostent *hp;
 #ifdef WINNT
 		char buf[BIG_BUFFER_SIZE+1];
 #endif		
@@ -561,9 +560,10 @@ int BX_connect_by_number(char *hostn, unsigned short *portnum, int service, int 
 			inet_aton(hostn, (struct in_addr *)&server.sf_addr);
 		else
 		{
-			if (!(hp = gethostbyname(hostn)))
+			struct sockaddr_foobar sf;
+			if (resolve_hostname(hostn, &sf) < 0)
 	  			return close(fd), -6;
-			memcpy(&server.sf_addr, hp->h_addr, hp->h_length);
+			memcpy(&server.sf_addr, &sf.sf_addr, sizeof(struct in_addr));
 		}
 		server.sf_family = AF_INET;
 		server.sf_port = htons(*portnum);
@@ -580,12 +580,12 @@ int BX_connect_by_number(char *hostn, unsigned short *portnum, int service, int 
 		}
 		if ((server.sf_addr.s_addr = inet_addr(hostn)) == -1)
 		{
-			if ((hp = gethostbyname(hostn)) != NULL)
+			struct sockaddr_foobar sf;
+			if (resolve_hostname(hostn, &sf) >= 0)
 			{
 				memset(&server, 0, sizeof(server));
-				bcopy(hp->h_addr, (char *) &server.sf_addr,
-					hp->h_length);
-				server.sf_family = hp->h_addrtype;
+				memcpy(&server.sf_addr, &sf.sf_addr, sizeof(struct in_addr));
+				server.sf_family = sf.sf_family;
 			}
 			else
 				return (-2);
@@ -641,13 +641,13 @@ int	lame_resolv (const char *hostname, struct sockaddr_foobar *buffer)
 	freeaddrinfo(res);
 	return 0;
 #else
-	struct hostent 	*hp;
+	struct sockaddr_foobar sf;
 
-	if (!(hp = gethostbyname(hostname)))
+	if (resolve_hostname(hostname, &sf) < 0)
 		return -1;
 
-	buffer->sf_family = AF_INET;
-	memmove(&buffer->sf_addr, hp->h_addr, hp->h_length);
+	buffer->sf_family = sf.sf_family;
+	memcpy(&buffer->sf_addr, &sf.sf_addr, sizeof(struct in_addr));
 	return 0;
 #endif	
 }
@@ -722,44 +722,57 @@ extern char *BX_one_to_another (const char *what)
 
 extern struct sockaddr_foobar *BX_lookup_host (const char *host)
 {
-	struct hostent *he;
 	static struct sockaddr_foobar sf;
+	struct sockaddr_foobar result;
 
 	alarm(1);
-	he = gethostbyname(host);
-	alarm(0);
-	if (he)
+	if (resolve_hostname(host, &result) >= 0)
 	{
-		sf.sf_family = AF_INET;
-		memcpy(&sf.sf_addr, he->h_addr, sizeof(struct in_addr));
+		memcpy(&sf, &result, sizeof(struct sockaddr_foobar));
+		alarm(0);
 		return &sf;
 	}
-	else
-		return NULL;
+	alarm(0);
+	return NULL;
 }
 
 extern char *BX_host_to_ip (const char *host)
 {
-	struct hostent *hep = gethostbyname(host);
-	static char ip[30];
+	struct sockaddr_foobar sf;
+	static char ip[128];
 
-	return (hep ? snprintf(ip,30,"%u.%u.%u.%u",	hep->h_addr[0] & 0xff,
-						hep->h_addr[1] & 0xff,
-						hep->h_addr[2] & 0xff,
-						hep->h_addr[3] & 0xff),
-						ip : empty_string);
+	if (resolve_hostname(host, &sf) >= 0)
+	{
+		inet_ntop(AF_INET, &sf.sf_addr, ip, sizeof(ip));
+		return ip;
+	}
+	return empty_string;
 }
 
 extern char *BX_ip_to_host (const char *ip)
 {
 	struct in_addr ia;
-	struct hostent *he;
+	struct addrinfo hints = { 0 };
+	struct addrinfo *res;
 	static char host[101];
 	
 	ia.s_addr = inet_addr(ip);
-	he = gethostbyaddr((char*) &ia, sizeof(struct in_addr), AF_INET);
+	hints.ai_family = AF_INET;
+	hints.ai_flags = AI_CANONNAME;
 
-	return (he ? strncpy(host, he->h_name, 100): empty_string);
+	if (getaddrinfo(inet_ntoa(ia), NULL, &hints, &res) == 0 && res && res->ai_canonname)
+	{
+		strncpy(host, res->ai_canonname, 100);
+		host[100] = '\0';
+		freeaddrinfo(res);
+		return host;
+	}
+	else
+	{
+		if (res) freeaddrinfo(res);
+		strlcpy(host, ip, sizeof host);
+		return host;
+	}
 }
 
 extern char *BX_one_to_another (const char *what)

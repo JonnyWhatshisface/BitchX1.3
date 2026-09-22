@@ -365,30 +365,77 @@ void freemyhostent(my_hostent *freeme)
 	new_free(&freeme);
 }
 
+/*
+ * Helper function to do DNS lookup using getaddrinfo()
+ * Returns a my_hostent structure (similar to gethostbyname/gethostbyaddr)
+ */
+static my_hostent *dns_lookup_by_addr(const char *addr, int is_ip)
+{
+	struct addrinfo hints, *res;
+	my_hostent *result;
+	struct sockaddr_in *sin;
+	char ip_str[INET_ADDRSTRLEN];
+	int z = 0;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+
+	if (is_ip) {
+		if (getaddrinfo(addr, NULL, &hints, &res) != 0 || !res)
+			return NULL;
+		sin = (struct sockaddr_in *)res->ai_addr;
+		inet_ntop(AF_INET, &sin->sin_addr, ip_str, sizeof(ip_str));
+		if (res->ai_canonname) {
+			result = new_malloc(sizeof(my_hostent));
+			result->h_name = m_strdup(res->ai_canonname);
+			result->h_addrtype = AF_INET;
+			result->h_length = sizeof(struct in_addr);
+			memset(result->h_addr_list, 0, sizeof(result->h_addr_list));
+			memset(result->h_aliases, 0, sizeof(result->h_aliases));
+			memcpy(&result->h_addr_list[z++], &sin->sin_addr, sizeof(struct in_addr));
+		} else {
+			result = NULL;
+		}
+		freeaddrinfo(res);
+	} else {
+		if (getaddrinfo(addr, NULL, &hints, &res) != 0 || !res)
+			return NULL;
+		sin = (struct sockaddr_in *)res->ai_addr;
+		result = new_malloc(sizeof(my_hostent));
+		result->h_name = m_strdup(res->ai_canonname ? res->ai_canonname : addr);
+		result->h_addrtype = AF_INET;
+		result->h_length = sizeof(struct in_addr);
+		memset(result->h_addr_list, 0, sizeof(result->h_addr_list));
+		memset(result->h_aliases, 0, sizeof(result->h_aliases));
+		if (res->ai_canonname && strcmp(res->ai_canonname, addr) != 0) {
+			result->h_aliases[z++] = m_strdup(res->ai_canonname);
+		}
+		memcpy(&result->h_addr_list[z++], &sin->sin_addr, sizeof(struct in_addr));
+		freeaddrinfo(res);
+	}
+	return result;
+}
+
 /* Does the actual DNS lookup.... host <---> ip  */
 static void do_dns_lookup(DNS_QUEUE *dns)
 {
-	struct hostent *temp;
+	my_hostent *temp;
 	struct in_addr temp1;
 	int ip = 0;
- 
+  
 	/* If nothing, give back nothing */
 	if (!dns->in)
 		return;
 	if (isdigit(*(dns->in + strlen(dns->in) - 1))) {
 		ip = 1;
 		temp1.s_addr = inet_addr(dns->in);
-		temp = gethostbyaddr((char*) &temp1,
-			sizeof (struct in_addr), AF_INET);
+		temp = dns_lookup_by_addr(dns->in, 1);
 	}
 	else {
-		temp = gethostbyname(dns->in);
+		temp = dns_lookup_by_addr(dns->in, 0);
 		if (temp)
-#if defined(_Windows)
-			memcpy(&temp1, temp->h_addr, temp->h_length);
-#else
-			memcpy((caddr_t)&temp1, temp->h_addr, temp->h_length);
-#endif
+			memcpy(&temp1, temp->h_addr_list[0], sizeof(struct in_addr));
 		else
 			return;
 	}
@@ -399,14 +446,16 @@ static void do_dns_lookup(DNS_QUEUE *dns)
 		if (temp->h_name && *temp->h_name) {
 			dns->out = (char *) malloc(strlen(temp->h_name) + 1);
 			strcpy(dns->out, temp->h_name);
-            dns->hostentr = duphostent(temp);
+            dns->hostentr = temp;
+		} else {
+			freemyhostent(temp);
 		}
 	}
 	else {
 		dns->ip = 0;
 		dns->out = (char *) malloc(strlen(inet_ntoa(temp1)) + 1);
 		strcpy(dns->out, inet_ntoa(temp1));
-        dns->hostentr = duphostent(temp);
+        dns->hostentr = temp;
 	}
 }
 

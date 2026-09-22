@@ -2433,6 +2433,16 @@ void	BX_strip_control (const char *src, char *dest)
 	*dest++ = 0;
 }
 
+char	*BX_strip_control_malloc (const char *src)
+{
+	char *dest;
+	int len = strlen(src);
+	
+	dest = new_malloc(len + 1);
+	BX_strip_control(src, dest);
+	return dest;
+}
+
 /*
  * figure_out_address
  */

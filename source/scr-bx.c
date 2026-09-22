@@ -393,7 +393,6 @@ void reattach_tty(char *tty, char *password)
 int s = -1;
 char *name;
 struct sockaddr_in addr;
-struct hostent *hp;
 int len = 0;
 fd_set rd_fd;
 struct timeval tm = {0};
@@ -435,10 +434,13 @@ struct winsize window;
 	memset(&addr, 0, sizeof(struct sockaddr_in));
 	addr.sin_port = htons(port);
 	addr.sin_family = AF_INET;
-	if((hp = gethostbyname("localhost")))
-		memcpy(&addr.sin_addr, hp->h_addr, hp->h_length);
-	else
-		inet_aton("127.0.0.1", (struct in_addr *)&addr.sin_addr);
+	{
+		struct sockaddr_foobar sf;
+		if (resolve_hostname("localhost", &sf) >= 0)
+			memcpy(&addr.sin_addr, &sf.sf_addr, sizeof(struct in_addr));
+		else
+			inet_aton("127.0.0.1", (struct in_addr *)&addr.sin_addr);
+	}
 	if (connect(s, (struct sockaddr *)&addr, sizeof(addr)) < 0)
 	{
 		fprintf(stderr, "connection refused for %s\r\n", name);

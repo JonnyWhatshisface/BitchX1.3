@@ -811,7 +811,31 @@ int code = 0;
 	f = expand_twiddle(filename);
 	
 	if ((p = strrchr(filename, '/')))	
-		p++;
+	{
+		char *validated_path = NULL;
+		char *dir = NULL;
+		int trusted = 0;
+
+		dir = m_strdup(filename);
+		if ((p = strrchr(dir, '/')))
+			*p = '\0';
+
+		if (dir && *dir)
+		{
+			if (!strcmp(dir, PLUGINDIR) || !strncmp(dir, PLUGINDIR, strlen(PLUGINDIR)))
+				trusted = 1;
+			else if (get_string_var(LOAD_PATH_VAR) && (!strncmp(dir, get_string_var(LOAD_PATH_VAR), strlen(get_string_var(LOAD_PATH_VAR)))))
+				trusted = 1;
+		}
+		new_free(&dir);
+
+		if (!trusted)
+		{
+			bitchsay("Module loading denied: path not in allowed directories");
+			new_free(&f);
+			return;
+		}
+	}
 	else
 	{
 		new_free(&f);
@@ -866,7 +890,7 @@ int code = 0;
 	convert_dos(f);
 	handle = LoadLibrary(f);
 #else
-	handle = dlopen(f, RTLD_NOW | RTLD_GLOBAL);
+	handle = dlopen(f, RTLD_NOW | RTLD_LOCAL);
 #endif
 #if defined(__EMX__)
 	if (ulerror)

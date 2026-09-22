@@ -3797,7 +3797,6 @@ static void handle_socket_connect(int rc)
 {
 struct servent *serv;
 struct sockaddr_foobar	addr;
-struct hostent *host;
 char buf[128], *hostname = buf;
         int             address_len;
 
@@ -3811,10 +3810,7 @@ char buf[128], *hostname = buf;
 			strcpy(hostname, "unknown");
 			if (addr.sf_family == AF_INET)
 			{
-				address_len = sizeof(struct in_addr);
-				if ((host = gethostbyaddr((char *)&addr.sf_addr, address_len, AF_INET)))
-					hostname = (char *)host->h_name;
-				else
+				if (getnameinfo((struct sockaddr*) &addr, sizeof(struct sockaddr_in), hostname, 128, NULL, 0, NI_NAMEREQD))
 					hostname = inet_ntoa(addr.sf_addr);
 			}
 #ifdef IPV6

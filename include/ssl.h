@@ -9,6 +9,7 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
+#include <openssl/x509v3.h>
 
 /* OpenSSL version compatibility layer */
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
